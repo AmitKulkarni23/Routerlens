@@ -152,7 +152,7 @@ export function ModelSelector({
       </Box>
 
       {selected.size < 2 && (
-        <Alert severity="info" sx={{ fontSize: "0.875rem" }}>
+        <Alert severity="info" sx={{ fontSize: "0.875rem", fontFamily: '"Geist Mono", monospace' }}>
           Select at least 2 models to compare
         </Alert>
       )}
