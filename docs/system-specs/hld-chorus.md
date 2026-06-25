@@ -200,19 +200,20 @@ Two endpoints total. That's the whole API.
 
 - **LCP < 2s:** Frontend is a static Vite bundle served from CloudFront edge. No SSR, no API calls blocking initial render. Model list loads after paint.
 - **First token < 3s:** Chorus Lambda fans out all OpenRouter requests concurrently via Tokio tasks. Zero serialization between models. The first model to respond starts streaming immediately — no waiting for all models to be ready.
-- **Models endpoint cached 5 min at CloudFront.** Free model list changes rarely. Avoids per-request round-trip to OpenRouter.
+- **Models endpoint cached 15 min at CloudFront.** Free model list changes rarely. Longer TTL reduces OpenRouter load and improves availability during demos.
+- **Frontend renders hardcoded fallback models** (3 popular free-tier models) immediately, fetches full list async. Worst case: partial model list but page is interactive.
 
 ### Security → NFR-SEC-01 (key not in frontend), NFR-SEC-02 (free-tier validation)
 
 - **API key lives only in Lambda environment variables.** Set at deploy time from local `.env`. Never in frontend bundle, never in CDK output.
-- **Free-tier validation:** Chorus Lambda maintains an in-memory set of valid free-tier model IDs (refreshed from OpenRouter on cold start, cached for the invocation lifetime). Rejects any model ID not in the set before making any OpenRouter call.
+- **Free-tier validation:** Chorus Lambda maintains an in-memory set of valid free-tier model IDs with a 60-second TTL (re-fetched from OpenRouter when expired, with a 5-second timeout on the fetch). Rejects any model ID not in the set before making any OpenRouter call. If the fetch fails or times out, returns 503.
 - **Origin-verify header** prevents direct Lambda URL access.
 - **CSP headers** on CloudFront restrict connect-src to self only.
 
 ### Observability → NFR-OBS-01 (structured logging)
 
 - **Structured JSON logging** via `tracing` + `tracing-subscriber` with JSON formatter, same as ModelArena.
-- **Per-request log fields:** prompt length (chars), model IDs, per-model time-to-first-token, per-model outcome (success/error + error type), total duration.
+- **Per-request log fields:** prompt length (chars), model IDs, per-model time-to-first-token, per-model outcome (success/error + error type), total duration, OpenRouter rate-limit headers (`x-ratelimit-remaining`, `x-ratelimit-reset`, `retry-after`) when present.
 - **X-Ray tracing** enabled on both Lambdas for request tracing through CloudFront → Lambda → OpenRouter.
 - **CloudWatch Logs** — default retention, no custom metrics for PoC.
 
@@ -224,3 +225,35 @@ Effectively zero at PoC scale:
 - S3: negligible for static assets
 - OpenRouter: free-tier models = $0 inference
 - No data store = no storage cost
+
+## Adversarial Review
+
+### Challenge 1: Free-Tier Validation Cache Staleness
+> Chorus Lambda caches free-tier model list on cold start for the invocation lifetime. If a model moves off free-tier mid-demo, Lambda still accepts it, causing cost leakage.
+
+**Disposition: Partially Accepted**
+Severity overstated — free-tier models don't flip pricing mid-day, and Lambda invocations are max 300s not hours. However, a short TTL is cheap insurance. Updated design: 60-second in-memory TTL with re-fetch (not per-invocation, which would add latency on every request). Fetch has a 5-second timeout; on failure, returns 503.
+
+### Challenge 2: No Timeout on Models Endpoint Fetch in Chorus Lambda
+> If OpenRouter hangs during free-tier validation, Chorus Lambda blocks indefinitely, wasting the 300s timeout and violating NFR-PERF-02.
+
+**Disposition: Accepted**
+Valid cascading failure risk. Added explicit 5-second timeout on the free-tier fetch. On timeout or failure, Chorus Lambda returns 503 immediately rather than hanging.
+
+### Challenge 3: No Fallback for Model Catalog Load
+> Frontend blocks on model list fetch. Cache miss during demo causes LCP violation.
+
+**Disposition: Partially Accepted**
+Hardcoded fallback list and extended cache TTL (5 min → 15 min) accepted — both cheap and effective. Rejected the S3 pre-bake suggestion as over-engineered for a PoC. Frontend renders 3 hardcoded popular free-tier models immediately, fetches full list async in the background.
+
+### Challenge 4: No Input Validation on Prompt or Model ID Array
+> Unvalidated prompt/model array sizes enable DoS. FR-SEL-02 max-6 not enforced server-side.
+
+**Disposition: Accepted**
+No argument — server-side validation is non-negotiable. Chorus Lambda will reject: prompt > 2,000 chars (400), model_ids count < 2 or > 6 (400), request body > 50 KB (413).
+
+### Challenge 5: No Observability into OpenRouter Rate Limiting
+> No logging of OpenRouter rate-limit headers makes operational debugging impossible during rate-limit events.
+
+**Disposition: Accepted**
+Zero cost, high value. Added `x-ratelimit-remaining`, `x-ratelimit-reset`, and `retry-after` headers to per-model structured log entries.
