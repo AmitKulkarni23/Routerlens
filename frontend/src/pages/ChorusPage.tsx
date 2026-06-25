@@ -4,10 +4,10 @@ import {
   Alert,
   CircularProgress,
   Typography,
-  Tabs,
-  Tab,
   Button,
-  Tooltip,
+  Divider,
+  Chip,
+  Stack,
 } from "@mui/material";
 import { ModelSummary } from "@/types/models";
 import { fetchModels, getFallbackModels } from "@/api/models";
@@ -18,7 +18,7 @@ import { ResponsePanel } from "@/components/ResponsePanel";
 
 type Phase = "setup" | "compare";
 
-const NAV_WIDTH = 220;
+const SIDEBAR_WIDTH = 260;
 
 export function ChorusPage() {
   const [models, setModels] = useState<ModelSummary[]>(getFallbackModels());
@@ -27,7 +27,6 @@ export function ChorusPage() {
   const [selectedModels, setSelectedModels] = useState<Set<string>>(new Set());
   const [prompt, setPrompt] = useState("");
   const [phase, setPhase] = useState<Phase>("setup");
-  const [activeModelId, setActiveModelId] = useState<string | null>(null);
   const [submittedPrompt, setSubmittedPrompt] = useState("");
   const { panels, isStreaming, submit } = useChorus();
 
@@ -56,28 +55,21 @@ export function ChorusPage() {
 
   const handleSubmit = async () => {
     if (selectedModels.size < 2 || !prompt.trim()) return;
-
     const modelNames = new Map<string, string>();
     models.forEach((m) => modelNames.set(m.id, m.name));
-
-    const orderedIds = Array.from(selectedModels);
     setSubmittedPrompt(prompt);
     setPhase("compare");
-    setActiveModelId(orderedIds[0]);
-
-    await submit(prompt, orderedIds, modelNames);
+    await submit(prompt, Array.from(selectedModels), modelNames);
   };
 
   const handleReset = () => {
     setPhase("setup");
-    setActiveModelId(null);
     setSubmittedPrompt("");
     setSelectedModels(new Set());
     setPrompt("");
   };
 
-  const panelList = Array.from(panels.values());
-
+  // ── Setup phase ──────────────────────────────────────────────────────────
   if (phase === "setup") {
     return (
       <Box
@@ -97,7 +89,6 @@ export function ChorusPage() {
               {modelError}
             </Alert>
           )}
-
           {loadingModels ? (
             <Box
               sx={{
@@ -130,8 +121,8 @@ export function ChorusPage() {
     );
   }
 
-  // Compare phase
-  const activePanel = activeModelId ? panels.get(activeModelId) : null;
+  // ── Compare phase ─────────────────────────────────────────────────────────
+  const panelList = Array.from(panels.values());
 
   return (
     <Box
@@ -142,10 +133,10 @@ export function ChorusPage() {
         overflow: "hidden",
       }}
     >
-      {/* Sliding left nav */}
+      {/* Sidebar — slides in */}
       <Box
         sx={{
-          width: `${NAV_WIDTH}px`,
+          width: `${SIDEBAR_WIDTH}px`,
           flexShrink: 0,
           borderRight: "1px solid #282d3d",
           backgroundColor: "#0d0f13",
@@ -159,14 +150,8 @@ export function ChorusPage() {
           },
         }}
       >
-        {/* Reset button */}
-        <Box
-          sx={{
-            padding: "12px 16px",
-            borderBottom: "1px solid #282d3d",
-            flexShrink: 0,
-          }}
-        >
+        {/* Reset */}
+        <Box sx={{ padding: "12px 16px", flexShrink: 0 }}>
           <Button
             size="small"
             onClick={handleReset}
@@ -185,159 +170,146 @@ export function ChorusPage() {
           </Button>
         </Box>
 
-        {/* Prompt preview */}
-        <Tooltip title={submittedPrompt} placement="right" arrow>
-          <Box
-            sx={{
-              padding: "10px 16px",
-              borderBottom: "1px solid #282d3d",
-              flexShrink: 0,
-            }}
-          >
-            <Typography
-              sx={{
-                fontSize: "0.65rem",
-                fontFamily: '"Geist Mono", monospace',
-                color: "#464d5d",
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-                marginBottom: "4px",
-              }}
-            >
-              Prompt
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: "0.75rem",
-                fontFamily: '"Geist", sans-serif',
-                color: "#717486",
-                overflow: "hidden",
-                display: "-webkit-box",
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
-                lineHeight: 1.4,
-              }}
-            >
-              {submittedPrompt}
-            </Typography>
-          </Box>
-        </Tooltip>
+        <Divider sx={{ borderColor: "#282d3d" }} />
 
-        {/* Vertical model tabs */}
-        <Box sx={{ flex: 1, overflow: "auto" }}>
-          <Tabs
-            orientation="vertical"
-            value={activeModelId}
-            onChange={(_, v) => setActiveModelId(v)}
+        {/* Prompt */}
+        <Box sx={{ padding: "12px 16px", flexShrink: 0 }}>
+          <Typography
             sx={{
-              "& .MuiTabs-indicator": {
-                left: 0,
-                right: "auto",
-                width: "2px",
-                backgroundColor: "#5e6ad2",
-              },
-              "& .MuiTab-root": {
-                alignItems: "flex-start",
-                textAlign: "left",
-                fontFamily: '"Geist", sans-serif',
-                fontSize: "0.8rem",
-                fontWeight: 400,
-                textTransform: "none",
-                color: "#717486",
-                padding: "10px 16px",
-                minHeight: 0,
-                letterSpacing: 0,
-                "&.Mui-selected": {
-                  color: "#eae8f0",
-                  backgroundColor: "#1a1f2e",
-                },
-                "&:hover:not(.Mui-selected)": {
-                  color: "#eae8f0",
-                  backgroundColor: "rgba(26,31,46,0.5)",
-                },
-              },
+              fontSize: "0.6rem",
+              fontFamily: '"Geist Mono", monospace',
+              color: "#464d5d",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              marginBottom: "6px",
             }}
           >
+            Prompt
+          </Typography>
+          <Typography
+            sx={{
+              fontSize: "0.8rem",
+              fontFamily: '"Geist", sans-serif',
+              color: "#eae8f0",
+              lineHeight: 1.5,
+              display: "-webkit-box",
+              WebkitLineClamp: 4,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}
+          >
+            {submittedPrompt}
+          </Typography>
+        </Box>
+
+        <Divider sx={{ borderColor: "#282d3d" }} />
+
+        {/* Model status list */}
+        <Box sx={{ flex: 1, overflow: "auto", padding: "12px 16px" }}>
+          <Typography
+            sx={{
+              fontSize: "0.6rem",
+              fontFamily: '"Geist Mono", monospace',
+              color: "#464d5d",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              marginBottom: "10px",
+            }}
+          >
+            Models ({panelList.length})
+          </Typography>
+          <Stack spacing={1.5}>
             {panelList.map((panel) => (
-              <Tab
-                key={panel.model_id}
-                value={panel.model_id}
-                label={
-                  <Box sx={{ display: "flex", flexDirection: "column", gap: "2px", width: "100%" }}>
-                    <Typography
+              <Box key={panel.model_id}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 1,
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      fontSize: "0.78rem",
+                      fontFamily: '"Geist", sans-serif',
+                      color: "#eae8f0",
+                      lineHeight: 1.3,
+                      flex: 1,
+                      minWidth: 0,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {panel.model_name}
+                  </Typography>
+                  {panel.status === "streaming" && (
+                    <Box
                       sx={{
-                        fontSize: "0.7rem",
+                        width: 6,
+                        height: 6,
+                        borderRadius: "50%",
+                        backgroundColor: "#5e6ad2",
+                        flexShrink: 0,
+                        animation: "pulse 1.5s ease-in-out infinite",
+                        "@keyframes pulse": {
+                          "0%, 100%": { opacity: 1 },
+                          "50%": { opacity: 0.3 },
+                        },
+                      }}
+                    />
+                  )}
+                  {panel.status === "done" && (
+                    <Chip
+                      label={panel.duration_ms ? `${panel.duration_ms}ms` : "done"}
+                      size="small"
+                      sx={{
+                        height: "16px",
+                        fontSize: "0.58rem",
                         fontFamily: '"Geist Mono", monospace',
-                        color: "inherit",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.04em",
-                        opacity: 0.6,
-                        lineHeight: 1,
+                        backgroundColor: "rgba(47,166,73,0.12)",
+                        color: "#2fa649",
+                        border: "none",
+                        "& .MuiChip-label": { padding: "0 6px" },
                       }}
-                    >
-                      {panel.provider ?? panel.model_id.split("/")[0]}
-                    </Typography>
-                    <Typography
+                    />
+                  )}
+                  {panel.status === "error" && (
+                    <Chip
+                      label="error"
+                      size="small"
                       sx={{
-                        fontSize: "0.8rem",
-                        fontFamily: '"Geist", sans-serif',
-                        color: "inherit",
-                        lineHeight: 1.2,
-                        whiteSpace: "normal",
-                        wordBreak: "break-word",
+                        height: "16px",
+                        fontSize: "0.58rem",
+                        fontFamily: '"Geist Mono", monospace',
+                        backgroundColor: "rgba(214,40,40,0.12)",
+                        color: "#d62828",
+                        border: "none",
+                        "& .MuiChip-label": { padding: "0 6px" },
                       }}
-                    >
-                      {panel.model_name}
-                    </Typography>
-                    {panel.status === "streaming" && (
-                      <Box
-                        sx={{
-                          width: "6px",
-                          height: "6px",
-                          borderRadius: "50%",
-                          backgroundColor: "#5e6ad2",
-                          marginTop: "4px",
-                          animation: "pulse 1.5s ease-in-out infinite",
-                          "@keyframes pulse": {
-                            "0%, 100%": { opacity: 1 },
-                            "50%": { opacity: 0.3 },
-                          },
-                        }}
-                      />
-                    )}
-                    {panel.status === "done" && (
-                      <Typography
-                        sx={{
-                          fontSize: "0.6rem",
-                          fontFamily: '"Geist Mono", monospace',
-                          color: "#2fa649",
-                          marginTop: "2px",
-                        }}
-                      >
-                        {panel.duration_ms ? `${panel.duration_ms}ms` : "done"}
-                      </Typography>
-                    )}
-                    {panel.status === "error" && (
-                      <Typography
-                        sx={{
-                          fontSize: "0.6rem",
-                          fontFamily: '"Geist Mono", monospace',
-                          color: "#d62828",
-                          marginTop: "2px",
-                        }}
-                      >
-                        error
-                      </Typography>
-                    )}
-                  </Box>
-                }
-              />
+                    />
+                  )}
+                </Box>
+                <Typography
+                  sx={{
+                    fontSize: "0.65rem",
+                    fontFamily: '"Geist Mono", monospace',
+                    color: "#464d5d",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.04em",
+                    marginTop: "2px",
+                  }}
+                >
+                  {panel.provider ?? panel.model_id.split("/")[0]}
+                </Typography>
+              </Box>
             ))}
-          </Tabs>
+          </Stack>
         </Box>
       </Box>
 
-      {/* Main response area */}
+      {/* Main viewport — all responses */}
       <Box
         sx={{
           flex: 1,
@@ -345,11 +317,10 @@ export function ChorusPage() {
           padding: 3,
           display: "flex",
           flexDirection: "column",
+          gap: 3,
         }}
       >
-        {activePanel ? (
-          <ResponsePanel panel={activePanel} />
-        ) : (
+        {panelList.length === 0 ? (
           <Box
             sx={{
               display: "flex",
@@ -361,8 +332,12 @@ export function ChorusPage() {
               fontSize: "0.875rem",
             }}
           >
-            Select a model
+            Waiting for responses…
           </Box>
+        ) : (
+          panelList.map((panel) => (
+            <ResponsePanel key={panel.model_id} panel={panel} />
+          ))
         )}
       </Box>
     </Box>

@@ -32,8 +32,7 @@ export function ResponsePanel({ panel }: ResponsePanelProps) {
       sx={{
         display: "flex",
         flexDirection: "column",
-        height: "100%",
-        minHeight: "400px",
+        minHeight: "280px",
         border: "1px solid",
         borderColor: isError
           ? "#d62828"
