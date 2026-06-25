@@ -68,17 +68,30 @@ export function ModelSelector({
       )}
 
       <Box>
-        <Typography
-          variant="h5"
-          sx={{
-            fontSize: "0.7rem",
-            fontFamily: '"Geist Mono", monospace',
-            marginBottom: 1,
-            color: "#717486",
-          }}
-        >
-          Available ({models.length})
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "baseline", gap: 1.5, marginBottom: 1 }}>
+          <Typography
+            variant="h5"
+            sx={{
+              fontSize: "0.7rem",
+              fontFamily: '"Geist Mono", monospace',
+              color: "#717486",
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+            }}
+          >
+            Free Models ({models.length})
+          </Typography>
+          <Typography
+            sx={{
+              fontSize: "0.65rem",
+              fontFamily: '"Geist Mono", monospace',
+              color: "#2fa649",
+              letterSpacing: "0.03em",
+            }}
+          >
+            $0 · no credits used
+          </Typography>
+        </Box>
 
         <Stack spacing={0.5} sx={{ maxHeight: "300px", overflowY: "auto" }}>
           {models.map((model) => {

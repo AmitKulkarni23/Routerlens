@@ -43,6 +43,11 @@ export async function fetchModels(): Promise<ModelsResponse> {
     }
 
     const data: ModelsResponse = await response.json();
+    // Strip redundant "(free)" / "(Free)" suffixes — the UI communicates free-tier at the section level
+    data.models = data.models.map((m) => ({
+      ...m,
+      name: m.name.replace(/\s*\(free\)\s*$/i, "").trim(),
+    }));
     cachedModels = data.models;
     return data;
   } catch (error) {
