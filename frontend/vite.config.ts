@@ -17,12 +17,18 @@ export default defineConfig(({ mode }) => {
         "/api/models": {
           target: env.MODELS_LAMBDA_URL ?? "http://localhost:9001",
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ""),
+          rewrite: (path) =>
+            env.MODELS_LAMBDA_URL
+              ? path.replace(/^\/api/, "")
+              : path.replace(/^\/api\/models.*/, "/lambda-url/models"),
         },
         "/api/chorus": {
           target: env.CHORUS_LAMBDA_URL ?? "http://localhost:9002",
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ""),
+          rewrite: (path) =>
+            env.CHORUS_LAMBDA_URL
+              ? path.replace(/^\/api/, "")
+              : path.replace(/^\/api\/chorus.*/, "/lambda-url/chorus"),
         },
       },
     },
