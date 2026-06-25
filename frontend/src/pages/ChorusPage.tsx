@@ -139,9 +139,9 @@ export function ChorusPage() {
             <Typography
               sx={{
                 fontFamily: '"Geist Mono", monospace',
-                fontSize: "0.75rem",
-                color: "#717486",
-                letterSpacing: "0.04em",
+                fontSize: "0.8rem",
+                color: "#9099b0",
+                letterSpacing: "0.06em",
                 marginTop: 2.5,
                 animation: "heroFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 280ms both",
               }}
