@@ -22,3 +22,10 @@ cdk.out/
 # Tool-specific
 .claude/
 .impeccable/
+.agents/
+.cursor/
+.gemini/
+.kiro/
+
+# TypeScript build info
+frontend/tsconfig.tsbuildinfo
