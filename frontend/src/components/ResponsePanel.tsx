@@ -209,7 +209,7 @@ export function ResponsePanel({ panel }: ResponsePanelProps) {
               <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
                 <Typography
                   variant="caption"
-                  sx={{ color: "#464d5d", fontFamily: '"Geist Mono", monospace', fontSize: "0.58rem", textTransform: "uppercase", letterSpacing: "0.06em" }}
+                  sx={{ color: "#717486", fontFamily: '"Geist Mono", monospace', fontSize: "0.58rem", textTransform: "uppercase", letterSpacing: "0.06em" }}
                 >
                   First byte
                 </Typography>
@@ -225,7 +225,7 @@ export function ResponsePanel({ panel }: ResponsePanelProps) {
               <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
                 <Typography
                   variant="caption"
-                  sx={{ color: "#464d5d", fontFamily: '"Geist Mono", monospace', fontSize: "0.58rem", textTransform: "uppercase", letterSpacing: "0.06em" }}
+                  sx={{ color: "#717486", fontFamily: '"Geist Mono", monospace', fontSize: "0.58rem", textTransform: "uppercase", letterSpacing: "0.06em" }}
                 >
                   Total time
                 </Typography>
