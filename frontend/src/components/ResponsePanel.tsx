@@ -119,7 +119,8 @@ export function ResponsePanel({ panel }: ResponsePanelProps) {
         sx={{
           display: "flex",
           flexDirection: "column",
-          minHeight: "280px",
+          height: "320px",
+          overflow: "hidden",
           border: "1px solid",
           borderColor: isError
             ? "#d62828"
