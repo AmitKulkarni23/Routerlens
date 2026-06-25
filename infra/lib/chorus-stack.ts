@@ -24,7 +24,7 @@ export class ChorusStack extends cdk.Stack {
       runtime: lambda.Runtime.PROVIDED_AL2023,
       handler: "bootstrap",
       code: lambda.Code.fromAsset(
-        path.join(__dirname, "../../backend/models/target/lambda/models/")
+        path.join(__dirname, "../../backend/target/lambda/models/")
       ),
       architecture: lambda.Architecture.ARM_64,
       memorySize: 256,
@@ -52,7 +52,7 @@ export class ChorusStack extends cdk.Stack {
       runtime: lambda.Runtime.PROVIDED_AL2023,
       handler: "bootstrap",
       code: lambda.Code.fromAsset(
-        path.join(__dirname, "../../backend/chorus/target/lambda/chorus/")
+        path.join(__dirname, "../../backend/target/lambda/chorus/")
       ),
       architecture: lambda.Architecture.ARM_64,
       memorySize: 1024,
