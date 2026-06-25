@@ -214,7 +214,7 @@ export function ResponsePanel({ panel }: ResponsePanelProps) {
                 </Typography>
                 <Typography
                   variant="caption"
-                  sx={{ color: "#9aa0b8", fontFamily: '"Geist Mono", monospace', fontSize: "0.75rem", fontWeight: 500 }}
+                  sx={{ color: "#2fa649", fontFamily: '"Geist Mono", monospace', fontSize: "0.75rem", fontWeight: 500 }}
                 >
                   {panel.ttfb_ms}ms
                 </Typography>
@@ -230,7 +230,7 @@ export function ResponsePanel({ panel }: ResponsePanelProps) {
                 </Typography>
                 <Typography
                   variant="caption"
-                  sx={{ color: "#9aa0b8", fontFamily: '"Geist Mono", monospace', fontSize: "0.75rem", fontWeight: 500 }}
+                  sx={{ color: "#2fa649", fontFamily: '"Geist Mono", monospace', fontSize: "0.75rem", fontWeight: 500 }}
                 >
                   {panel.duration_ms}ms
                 </Typography>
