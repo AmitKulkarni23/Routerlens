@@ -279,8 +279,10 @@ pub struct ModelErrorData {
 4. Validate request (validation.rs) → 400 if invalid
 5. Validate model IDs against free-tier cache (free_tier.rs) → 400/503
 6. Create mpsc::channel<Bytes>(100)
-7. Spawn fanout task (fanout.rs)
-8. Return streaming Response with channel as body
+7. Create CancellationToken
+8. Spawn fanout task (fanout.rs) with cancel token clone
+9. Return streaming Response that owns cancel token — on drop (client disconnect),
+   token is cancelled, all Tokio tasks exit cleanly via tokio::select!
 ```
 
 Same streaming response pattern as ModelArena's orchestrator: `lambda_http::run_with_streaming_response` + `streaming::channel()`.
@@ -291,18 +293,19 @@ Separate from the Models Lambda cache. Chorus Lambda needs its own free-tier val
 
 ```rust
 static FREE_TIER_CACHE: OnceLock<RwLock<FreeTierCache>> = OnceLock::new();
+static REFRESH_IN_PROGRESS: AtomicBool = AtomicBool::new(false);
 
 struct FreeTierCache {
     model_ids: HashSet<String>,
     fetched_at: Option<Instant>,
-    ttl: Duration,  // 60 seconds (per adversarial review)
+    ttl: Duration,  // 60 seconds (per HLD adversarial review)
 }
 ```
 
 - Fetches OpenRouter GET /models directly (not via Models Lambda)
-- 5-second timeout on fetch (per adversarial review)
-- On timeout/failure: return 503 (do NOT serve stale data — stale free-tier data is a cost risk)
-- Double-checked locking same as Models Lambda cache
+- 5-second timeout on fetch (per HLD adversarial review)
+- **Stale-while-revalidate pattern:** read lock checks freshness. If stale but data exists, serve stale data AND spawn a background `tokio::spawn` refresh (debounced via `REFRESH_IN_PROGRESS` AtomicBool). If cache is empty (never populated), block on fetch — return 503 on failure.
+- Background refresh avoids blocking concurrent requests on the write lock during TTL expiry.
 
 **Fan-out logic (fanout.rs):**
 
@@ -311,6 +314,7 @@ fn fan_out(
     request: ChorusRequest,
     tx: mpsc::Sender<Bytes>,
     client: Arc<OpenRouterClient>,
+    cancel: CancellationToken,
 ) {
     // Spawn one Tokio task per model
     let mut handles = Vec::new();
@@ -319,9 +323,13 @@ fn fan_out(
         let tx = tx.clone();
         let client = client.clone();
         let prompt = request.prompt.clone();
+        let cancel = cancel.clone();
 
         let handle = tokio::spawn(async move {
-            stream_model(model_id, prompt, tx, client).await
+            tokio::select! {
+                _ = cancel.cancelled() => { /* client disconnected, exit cleanly */ }
+                _ = stream_model(model_id, prompt, tx, client) => {}
+            }
         });
 
         handles.push(handle);
@@ -384,9 +392,11 @@ data: {"id":"...","choices":[{"delta":{"content":" world"}}]}
 data: [DONE]
 ```
 
-Parse each `data:` line:
+Wrap the response byte stream in `tokio::io::BufReader` + `AsyncBufReadExt::lines()` to ensure complete UTF-8 sequences and clean line boundaries (network chunks can split multi-byte characters).
+
+Parse each complete line:
 - Skip empty lines and `data: [DONE]`
-- Deserialize JSON, extract `choices[0].delta.content`
+- Strip `data: ` prefix, deserialize JSON, extract `choices[0].delta.content`
 - If content is non-empty, send as TokenEvent
 
 **Rate-limit header capture (per adversarial review):**
@@ -664,12 +674,14 @@ OUTPUT: multiplexed SSE stream
       iii. If HTTP error → send ModelError event → return
       iv.  Capture rate-limit headers from response
       v.   Read response body as byte stream
-      vi.  For each SSE "data:" line from OpenRouter:
+      vi.  Wrap response body in BufReader for line-buffered reading
+           (ensures complete UTF-8 sequences and clean line boundaries)
+      vii. For each complete line from OpenRouter:
            - If "[DONE]" → send ModelDone event with timing → return
            - Parse JSON, extract choices[0].delta.content
            - If first non-empty content → record ttfb
            - Send Token event with model_id + content
-      vii. If stream error → send ModelError event → return
+      viii.If stream error → send ModelError event → return
 3. join_all(handles)
 4. Send Done event
 5. Drop tx → receiver sees channel closed → response stream ends
@@ -737,7 +749,7 @@ OUTPUT: sequence of typed SseEvent objects
 | Single model returns unparseable SSE | Log warning, skip malformed chunk | Continue reading stream |
 | OpenRouter rate limits (429) | Send ModelError with status_code 429 | No retry for streaming (complexity too high for PoC) |
 | All models fail | Each sends ModelError, then Done event | Frontend shows errors in all panels |
-| Client disconnects mid-stream | tx.send() returns Err | Tokio tasks detect closed channel, stop cleanly |
+| Client disconnects mid-stream | CancellationToken fires, all Tokio tasks exit via tokio::select! | OpenRouter connections dropped, Lambda invocation ends promptly |
 | Request body unparseable | Return 400 before streaming starts | Client retries |
 
 ### 5.3 Frontend
@@ -783,7 +795,8 @@ OUTPUT: sequence of typed SseEvent objects
 | `test_sse_token_event_format` | TokenEvent serializes to correct SSE wire format |
 | `test_sse_done_event_format` | DoneEvent serializes to `event: done\ndata: {}\n\n` |
 | `test_free_tier_cache_ttl` | Cache expires after 60s, triggers refetch |
-| `test_free_tier_cache_rejects_stale` | Stale free-tier cache returns 503 (no stale fallback) |
+| `test_free_tier_cache_serves_stale_while_refreshing` | Stale cache serves existing data and spawns background refresh |
+| `test_free_tier_cache_empty_returns_503` | Empty cache (never populated) + fetch failure returns 503 |
 
 ### 6.3 Chorus Lambda — Integration Tests
 
@@ -892,3 +905,37 @@ Note: `reqwest` has `stream` feature enabled — needed for reading OpenRouter's
   }
 }
 ```
+
+---
+
+## Adversarial Review
+
+### Challenge 1: SSE Channel Capacity Bottleneck Under Concurrent Load
+> Fixed 100-capacity mpsc buffer risks stalling streams when multiple models generate tokens rapidly and the browser can't keep pace.
+
+**Disposition: Rejected**
+`mpsc::channel` with bounded capacity is correct by design — when full, `tx.send().await` awaits (applies backpressure), it doesn't drop events. The producer (Tokio task reading from OpenRouter) pauses until the consumer (Lambda streaming response) catches up. The consumer is fast — it just forwards bytes to the Lambda response stream. CloudFront and the browser's network stack buffer between server and client. 100 events is ~50KB of buffered SSE data — well within Lambda's 1024MB. No change needed.
+
+### Challenge 2: Free-Tier Cache Sync Fetch Blocks All Requests
+> Synchronous fetch inside write lock during TTL expiry blocks all concurrent requests. A single timeout takes down traffic.
+
+**Disposition: Partially Accepted**
+Valid concurrency concern. Adopted stale-while-revalidate pattern: serve existing cached data immediately from read lock, spawn background refresh (debounced via AtomicBool). Only block on fetch when cache is empty (first cold start). This preserves availability without serving indefinitely stale data. Rejected the suggestion to always serve stale — empty cache must still return 503 to prevent routing to unknown models.
+
+### Challenge 3: OpenRouter SSE Parsing Does Not Handle Partial UTF-8 Sequences
+> Network chunks can split multi-byte UTF-8 characters, causing JSON parse failures or corrupted content.
+
+**Disposition: Accepted**
+Valid correctness issue. Added `BufReader` + `AsyncBufReadExt::lines()` wrapping around the OpenRouter response byte stream. Line-buffered reading ensures complete UTF-8 sequences before JSON deserialization. Updated algorithm description and implementation notes.
+
+### Challenge 4: No Cancellation on Client Disconnect
+> Abandoned HTTP connections let Tokio tasks run to 300s Lambda timeout, wasting compute.
+
+**Disposition: Accepted**
+Valid efficiency concern. Added `CancellationToken` pattern (already used in ModelArena's orchestrator). Response stream owns the token; on drop (client disconnect), all fan-out tasks exit cleanly via `tokio::select!`. Updated handler flow, fan-out pseudocode, and error handling table.
+
+### Challenge 5: No Request Idempotency or Deduplication
+> Retries spawn duplicate fan-outs, inflating request counts and potentially hitting rate limits.
+
+**Disposition: Rejected**
+Over-engineered for a PoC with free-tier models (zero inference cost, no billing risk). Adding idempotency caching requires persistent state (DynamoDB or in-memory store) which contradicts the "no data store" architecture decision. Duplicate fan-outs are operationally harmless — they appear in logs as separate requests, which is correct behavior. If rate limits become an issue, the ModelError SSE event already handles 429s gracefully.
