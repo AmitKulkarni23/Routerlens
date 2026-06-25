@@ -84,6 +84,75 @@ export function ChorusPage() {
         }}
       >
         <Box sx={{ width: "100%", maxWidth: 560 }}>
+          {/* Hero Section */}
+          <Box
+            sx={{
+              marginBottom: 6,
+              "@keyframes heroFadeUp": {
+                from: { opacity: 0, transform: "translateY(10px)" },
+                to: { opacity: 1, transform: "translateY(0)" },
+              },
+            }}
+          >
+            <Typography
+              sx={{
+                display: "display",
+                fontFamily: '"Geist", sans-serif',
+                fontWeight: 700,
+                fontSize: "clamp(2rem, 5vw, 3.25rem)",
+                letterSpacing: "-0.04em",
+                color: "#eae8f0",
+                marginBottom: 0,
+                animation: "heroFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0ms both",
+              }}
+            >
+              One prompt.
+            </Typography>
+            <Typography
+              sx={{
+                display: "display",
+                fontFamily: '"Geist", sans-serif',
+                fontWeight: 700,
+                fontSize: "clamp(2rem, 5vw, 3.25rem)",
+                letterSpacing: "-0.04em",
+                color: "#eae8f0",
+                marginBottom: 0,
+                animation: "heroFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 80ms both",
+              }}
+            >
+              Many models.
+            </Typography>
+            <Typography
+              sx={{
+                display: "display",
+                fontFamily: '"Geist", sans-serif',
+                fontWeight: 700,
+                fontSize: "clamp(2rem, 5vw, 3.25rem)",
+                letterSpacing: "-0.04em",
+                color: "#717486",
+                marginBottom: 0,
+                animation: "heroFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 160ms both",
+              }}
+            >
+              Side by side.
+            </Typography>
+            <Typography
+              sx={{
+                fontFamily: '"Geist Mono", monospace',
+                fontSize: "0.75rem",
+                color: "#464d5d",
+                letterSpacing: "0.04em",
+                marginTop: 2.5,
+                animation: "heroFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 280ms both",
+              }}
+            >
+              parallel inference · zero cost · no ranking
+            </Typography>
+          </Box>
+
+          {/* Divider */}
+          <Divider sx={{ borderColor: "#282d3d", marginBottom: 4 }} />
+
           {modelError && (
             <Alert severity="info" sx={{ marginBottom: 3, fontSize: "0.8rem" }}>
               {modelError}
@@ -318,6 +387,10 @@ export function ChorusPage() {
           display: "flex",
           flexDirection: "column",
           gap: 3,
+          "@keyframes panelEnter": {
+            from: { opacity: 0, transform: "translateY(12px)" },
+            to: { opacity: 1, transform: "translateY(0)" },
+          },
         }}
       >
         {panelList.length === 0 ? (
@@ -335,8 +408,15 @@ export function ChorusPage() {
             Waiting for responses…
           </Box>
         ) : (
-          panelList.map((panel) => (
-            <ResponsePanel key={panel.model_id} panel={panel} />
+          panelList.map((panel, index) => (
+            <Box
+              key={panel.model_id}
+              sx={{
+                animation: `panelEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) ${index * 80}ms both`,
+              }}
+            >
+              <ResponsePanel panel={panel} />
+            </Box>
           ))
         )}
       </Box>

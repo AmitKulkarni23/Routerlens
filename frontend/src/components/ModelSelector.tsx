@@ -106,7 +106,16 @@ export function ModelSelector({
                 }
                 disableInteractive
               >
-                <Box>
+                <Box
+                  sx={{
+                    borderRadius: "4px",
+                    transition: "background-color 120ms ease",
+                    minHeight: "36px",
+                    display: "flex",
+                    alignItems: "center",
+                    "&:hover": !isDisabled ? { backgroundColor: "#1a1f2e" } : {},
+                  }}
+                >
                   <FormControlLabel
                     control={
                       <Checkbox

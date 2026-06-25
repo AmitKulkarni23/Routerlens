@@ -4,7 +4,6 @@ import {
   Paper,
   Typography,
   Button,
-  CircularProgress,
   Alert,
   Dialog,
   DialogTitle,
@@ -69,7 +68,26 @@ export function ResponsePanel({ panel }: ResponsePanelProps) {
 
       {isStreaming && panel.content.length === 0 && (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <CircularProgress size={16} sx={{ color: "#5e6ad2" }} />
+          {/* Three pulsing dots */}
+          <Box sx={{ display: "flex", alignItems: "center", gap: "4px" }}>
+            {[0, 1, 2].map((i) => (
+              <Box
+                key={i}
+                sx={{
+                  width: "4px",
+                  height: "4px",
+                  borderRadius: "50%",
+                  backgroundColor: "#5e6ad2",
+                  animation: "pulse 1.5s ease-in-out infinite",
+                  animationDelay: `${i * 0.2}s`,
+                  "@keyframes pulse": {
+                    "0%, 100%": { opacity: 0.3 },
+                    "50%": { opacity: 1 },
+                  },
+                }}
+              />
+            ))}
+          </Box>
           <Typography
             variant="body1"
             sx={{ color: "#717486", fontFamily: '"Geist Mono", monospace', fontSize: "0.875rem" }}
@@ -81,10 +99,23 @@ export function ResponsePanel({ panel }: ResponsePanelProps) {
     </>
   );
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if ((e.key === 'Enter' || e.key === ' ') && hasContent) {
+      e.preventDefault();
+      setExpanded(true);
+    }
+  };
+
   return (
     <>
       <Paper
+        role={hasContent ? "button" : undefined}
+        tabIndex={hasContent ? 0 : undefined}
+        aria-label={hasContent ? `Expand ${headerLabel}` : undefined}
+        aria-expanded={expanded}
+        title={hasContent ? "Click to expand" : undefined}
         onClick={() => hasContent && setExpanded(true)}
+        onKeyDown={handleKeyDown}
         sx={{
           display: "flex",
           flexDirection: "column",
@@ -142,24 +173,6 @@ export function ResponsePanel({ panel }: ResponsePanelProps) {
                 }}
               >
                 Copy
-              </Button>
-            )}
-            {hasContent && (
-              <Button
-                size="small"
-                onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
-                sx={{
-                  fontFamily: '"Geist Mono", monospace',
-                  fontSize: "0.65rem",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  color: "#464d5d",
-                  minWidth: 0,
-                  padding: "2px 6px",
-                  "&:hover": { color: "#eae8f0" },
-                }}
-              >
-                ⤢
               </Button>
             )}
           </Box>

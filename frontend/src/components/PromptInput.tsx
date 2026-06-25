@@ -92,6 +92,9 @@ export function PromptInput({
             fontWeight: 500,
             textTransform: "none",
             minWidth: "120px",
+            transition: "background-color 150ms ease, transform 150ms ease",
+            "&:not(:disabled):hover": { transform: "translateY(-1px)" },
+            "&:active": { transform: "translateY(0)" },
           }}
         >
           Compare →

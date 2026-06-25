@@ -45,8 +45,9 @@ export function MarkdownRenderer({ content, showCursor }: MarkdownRendererProps)
           margin: "0.5em 0",
         },
         "& blockquote": {
-          borderLeft: "3px solid #282d3d",
-          paddingLeft: "1em",
+          backgroundColor: "#0d0f13",
+          padding: "0.75em 1em",
+          borderRadius: "4px",
           margin: "0.5em 0",
           color: "#717486",
         },
