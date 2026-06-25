@@ -84,6 +84,7 @@ export function ResponsePanel({ panel }: ResponsePanelProps) {
   return (
     <>
       <Paper
+        onClick={() => hasContent && setExpanded(true)}
         sx={{
           display: "flex",
           flexDirection: "column",
@@ -99,6 +100,8 @@ export function ResponsePanel({ panel }: ResponsePanelProps) {
             : "none",
           backgroundColor: "#13161e",
           transition: "border-color 150ms ease, box-shadow 150ms ease",
+          cursor: hasContent ? "pointer" : "default",
+          "&:hover": hasContent ? { borderColor: isError ? "#d62828" : isStreaming ? "rgba(94,106,210,0.3)" : "#3d4460" } : {},
         }}
       >
         {/* Header */}
@@ -109,12 +112,7 @@ export function ResponsePanel({ panel }: ResponsePanelProps) {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            cursor: hasContent ? "pointer" : "default",
-            "&:hover": hasContent
-              ? { backgroundColor: "rgba(255,255,255,0.02)" }
-              : {},
           }}
-          onClick={() => hasContent && setExpanded(true)}
         >
           <Typography
             variant="h5"
@@ -184,29 +182,46 @@ export function ResponsePanel({ panel }: ResponsePanelProps) {
         {/* Footer */}
         {isDone && (panel.ttfb_ms !== undefined || panel.duration_ms !== undefined) && (
           <Box
+            onClick={(e) => e.stopPropagation()}
             sx={{
-              padding: "12px 16px",
+              padding: "10px 16px",
               borderTop: "1px solid #282d3d",
               display: "flex",
-              gap: 2,
+              gap: 3,
               justifyContent: "flex-end",
             }}
           >
             {panel.ttfb_ms !== undefined && (
-              <Typography
-                variant="caption"
-                sx={{ color: "#464d5d", fontFamily: '"Geist Mono", monospace', fontSize: "0.65rem" }}
-              >
-                TTFB: {panel.ttfb_ms}ms
-              </Typography>
+              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                <Typography
+                  variant="caption"
+                  sx={{ color: "#464d5d", fontFamily: '"Geist Mono", monospace', fontSize: "0.58rem", textTransform: "uppercase", letterSpacing: "0.06em" }}
+                >
+                  First byte
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ color: "#9aa0b8", fontFamily: '"Geist Mono", monospace', fontSize: "0.75rem", fontWeight: 500 }}
+                >
+                  {panel.ttfb_ms}ms
+                </Typography>
+              </Box>
             )}
             {panel.duration_ms !== undefined && (
-              <Typography
-                variant="caption"
-                sx={{ color: "#464d5d", fontFamily: '"Geist Mono", monospace', fontSize: "0.65rem" }}
-              >
-                Duration: {panel.duration_ms}ms
-              </Typography>
+              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+                <Typography
+                  variant="caption"
+                  sx={{ color: "#464d5d", fontFamily: '"Geist Mono", monospace', fontSize: "0.58rem", textTransform: "uppercase", letterSpacing: "0.06em" }}
+                >
+                  Total time
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{ color: "#9aa0b8", fontFamily: '"Geist Mono", monospace', fontSize: "0.75rem", fontWeight: 500 }}
+                >
+                  {panel.duration_ms}ms
+                </Typography>
+              </Box>
             )}
           </Box>
         )}
