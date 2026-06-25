@@ -43,11 +43,15 @@ export async function fetchModels(): Promise<ModelsResponse> {
     }
 
     const data: ModelsResponse = await response.json();
-    // Strip redundant "(free)" / "(Free)" suffixes — the UI communicates free-tier at the section level
-    data.models = data.models.map((m) => ({
-      ...m,
-      name: m.name.replace(/\s*\(free\)\s*$/i, "").trim(),
-    }));
+    // Hard client-side filter: only show models with :free suffix.
+    // OpenRouter uses this suffix on every free-tier model — defense-in-depth
+    // so no paid model can appear even if the backend filter misbehaves.
+    data.models = data.models
+      .filter((m) => m.id.endsWith(":free"))
+      .map((m) => ({
+        ...m,
+        name: m.name.replace(/\s*\(free\)\s*$/i, "").trim(),
+      }));
     cachedModels = data.models;
     return data;
   } catch (error) {
