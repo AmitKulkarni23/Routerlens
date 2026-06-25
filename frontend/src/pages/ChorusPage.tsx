@@ -140,7 +140,7 @@ export function ChorusPage() {
               sx={{
                 fontFamily: '"Geist Mono", monospace',
                 fontSize: "0.75rem",
-                color: "#464d5d",
+                color: "#717486",
                 letterSpacing: "0.04em",
                 marginTop: 2.5,
                 animation: "heroFadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 280ms both",
@@ -247,7 +247,7 @@ export function ChorusPage() {
             sx={{
               fontSize: "0.6rem",
               fontFamily: '"Geist Mono", monospace',
-              color: "#464d5d",
+              color: "#717486",
               textTransform: "uppercase",
               letterSpacing: "0.06em",
               marginBottom: "6px",
@@ -279,7 +279,7 @@ export function ChorusPage() {
             sx={{
               fontSize: "0.6rem",
               fontFamily: '"Geist Mono", monospace',
-              color: "#464d5d",
+              color: "#717486",
               textTransform: "uppercase",
               letterSpacing: "0.06em",
               marginBottom: "10px",
@@ -364,7 +364,7 @@ export function ChorusPage() {
                   sx={{
                     fontSize: "0.65rem",
                     fontFamily: '"Geist Mono", monospace',
-                    color: "#464d5d",
+                    color: "#717486",
                     textTransform: "uppercase",
                     letterSpacing: "0.04em",
                     marginTop: "2px",
@@ -400,7 +400,7 @@ export function ChorusPage() {
               alignItems: "center",
               justifyContent: "center",
               flex: 1,
-              color: "#464d5d",
+              color: "#717486",
               fontFamily: '"Geist Mono", monospace',
               fontSize: "0.875rem",
             }}
