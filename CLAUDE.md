@@ -64,6 +64,23 @@ cd backend/models && cargo lambda build --release --arm64
 make deploy   # builds all + cdk deploy
 ```
 
+## Local Dev (3 terminals)
+
+Vite proxies `/api/models` → `localhost:9001` and `/api/chorus` → `localhost:9002`.
+
+```bash
+# Terminal 1
+make dev-models      # cargo lambda watch on port 9001
+
+# Terminal 2
+make dev-chorus      # cargo lambda watch on port 9002
+
+# Terminal 3
+make dev-frontend    # bun run dev → http://localhost:5173
+```
+
+The `.env` at repo root must have `OPENROUTER_API_KEY=sk-or-...`.
+
 ## Conventions
 
 - Follow ModelArena project patterns (`~/TechProjects/ModelArena/`) for CDK, Lambda, and frontend structure
@@ -72,6 +89,7 @@ make deploy   # builds all + cdk deploy
 - No native Rust builds on macOS — use cargo-lambda (cross-compiles via Zig)
 - System specs live in `docs/system-specs/`
 - Two-phase commit messages: subject line + body
+- After editing any file, commit and push the changes
 
 ## Environment
 
