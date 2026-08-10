@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import { AppBar, Box, Container, Tab, Tabs, Toolbar, Typography } from "@mui/material";
 import ProviderOverview from "./pages/ProviderOverview";
@@ -7,15 +8,26 @@ import CategoryBreakdown from "./pages/CategoryBreakdown";
 import Methodology from "./pages/Methodology";
 
 const NAV = [
-  { label: "Overview", to: "/" },
-  { label: "Pass Rate", to: "/timeseries" },
-  { label: "Categories", to: "/categories" },
-  { label: "Incidents", to: "/incidents" },
-  { label: "Methodology", to: "/methodology" },
+  { label: "Overview", to: "/", docTitle: "Routerlens" },
+  { label: "Pass Rate", to: "/timeseries", docTitle: "Pass Rate — Routerlens" },
+  { label: "Categories", to: "/categories", docTitle: "Categories — Routerlens" },
+  { label: "Incidents", to: "/incidents", docTitle: "Incidents — Routerlens" },
+  { label: "Methodology", to: "/methodology", docTitle: "Methodology — Routerlens" },
 ];
+
+function useDocumentTitle() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const match = NAV.find((n) =>
+      n.to === "/" ? pathname === "/" : pathname.startsWith(n.to),
+    );
+    document.title = match?.docTitle ?? "Routerlens";
+  }, [pathname]);
+}
 
 function NavTabs() {
   const { pathname } = useLocation();
+  useDocumentTitle();
   const current = NAV.findIndex((n) =>
     n.to === "/" ? pathname === "/" : pathname.startsWith(n.to),
   );
@@ -31,6 +43,14 @@ function NavTabs() {
         />
       ))}
     </Tabs>
+  );
+}
+
+if (typeof window !== "undefined" && import.meta.env.PROD) {
+  console.log(
+    "%cRouterlens",
+    "font-weight:700;font-size:14px;color:#2d6a4f",
+    "— per-provider quality monitoring for OpenRouter.\nhttps://github.com/amitrk/Chorus",
   );
 }
 

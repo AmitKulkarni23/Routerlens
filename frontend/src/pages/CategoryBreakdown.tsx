@@ -38,7 +38,8 @@ export default function CategoryBreakdown() {
       error={err}
       onRetry={load}
       emptyCheck={(d) => d.length === 0}
-      emptyMessage="No category data available yet."
+      loadingHint="Loading category scores…"
+      emptyMessage="No category data yet. Breakdown appears after the first probe run."
     >
       {(data) => {
         const providers = Array.from(

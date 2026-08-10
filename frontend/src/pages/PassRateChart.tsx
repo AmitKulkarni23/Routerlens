@@ -48,7 +48,8 @@ export default function PassRateChart() {
       error={err}
       onRetry={load}
       emptyCheck={(d) => d.length === 0}
-      emptyMessage="No timeseries data available yet."
+      loadingHint="Building pass rate timeline…"
+      emptyMessage="No timeseries data yet. Results accumulate after each daily probe run."
     >
       {(data) => {
         const providers = Array.from(

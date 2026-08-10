@@ -1,5 +1,5 @@
 import { Box, Button, CircularProgress, Typography } from "@mui/material";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 
 interface Props<T> {
   data: T | null;
@@ -8,7 +8,26 @@ interface Props<T> {
   children: (data: T) => ReactNode;
   emptyCheck?: (data: T) => boolean;
   emptyMessage?: string;
+  loadingHint?: string;
   title: string;
+}
+
+function FadeIn({ children }: { children: ReactNode }) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+  return (
+    <Box
+      sx={{
+        opacity: visible ? 1 : 0,
+        transition: "opacity 0.3s ease-out",
+      }}
+    >
+      {children}
+    </Box>
+  );
 }
 
 export default function AsyncPage<T>({
@@ -18,6 +37,7 @@ export default function AsyncPage<T>({
   children,
   emptyCheck,
   emptyMessage = "No data available.",
+  loadingHint = "Loading…",
   title,
 }: Props<T>) {
   if (error) {
@@ -37,7 +57,7 @@ export default function AsyncPage<T>({
           }}
         >
           <Typography color="text.secondary" sx={{ fontSize: "0.9375rem" }}>
-            Failed to load data.
+            Couldn't reach the data layer.
           </Typography>
           <Typography
             variant="caption"
@@ -52,7 +72,7 @@ export default function AsyncPage<T>({
               onClick={onRetry}
               sx={{ textTransform: "none" }}
             >
-              Try again
+              Retry
             </Button>
           )}
         </Box>
@@ -69,14 +89,22 @@ export default function AsyncPage<T>({
         <Box
           sx={{
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
             py: 8,
+            gap: 1,
           }}
           role="status"
           aria-label="Loading"
         >
           <CircularProgress size={28} thickness={4} color="primary" />
+          <Typography
+            variant="caption"
+            sx={{ color: "text.secondary", mt: 1 }}
+          >
+            {loadingHint}
+          </Typography>
         </Box>
       </Box>
     );
@@ -107,7 +135,7 @@ export default function AsyncPage<T>({
       <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
         {title}
       </Typography>
-      {children(data)}
+      <FadeIn>{children(data)}</FadeIn>
     </Box>
   );
 }

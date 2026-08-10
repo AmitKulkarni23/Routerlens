@@ -47,6 +47,7 @@ export default function IncidentsFeed() {
       error={err}
       onRetry={load}
       emptyCheck={(d) => d.length === 0}
+      loadingHint="Checking incident history…"
       emptyMessage="No incidents recorded. All providers operating within expected ranges."
     >
       {(data) => (

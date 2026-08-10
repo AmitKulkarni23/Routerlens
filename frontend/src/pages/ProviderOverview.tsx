@@ -18,9 +18,11 @@ function fmt(v: number | null, decimals = 1): string {
 function ProviderCard({
   stat,
   color,
+  index,
 }: {
   stat: ProviderStat;
   color: string;
+  index: number;
 }) {
   const passRate = stat.pass_rate;
 
@@ -28,6 +30,13 @@ function ProviderCard({
     <Card
       sx={{
         height: "100%",
+        opacity: 0,
+        animation: "cardIn 0.35s ease-out forwards",
+        animationDelay: `${index * 60}ms`,
+        "@keyframes cardIn": {
+          from: { opacity: 0, transform: "translateY(8px)" },
+          to: { opacity: 1, transform: "translateY(0)" },
+        },
         transition: "box-shadow 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
         "&:hover": {
           boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
@@ -171,13 +180,14 @@ export default function ProviderOverview() {
       error={err}
       onRetry={load}
       emptyCheck={(d) => d.length === 0}
-      emptyMessage="No provider data recorded yet."
+      loadingHint="Fetching latest provider measurements…"
+      emptyMessage="No probe results yet. The first daily run will populate this view."
     >
       {(data) => (
         <Grid container spacing={2.5}>
           {data.map((s, i) => (
             <Grid key={s.provider} size={{ xs: 12, sm: 6, md: 3 }}>
-              <ProviderCard stat={s} color={getProviderColor(s.provider, i)} />
+              <ProviderCard stat={s} color={getProviderColor(s.provider, i)} index={i} />
             </Grid>
           ))}
         </Grid>
