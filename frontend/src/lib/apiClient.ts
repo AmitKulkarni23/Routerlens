@@ -30,6 +30,14 @@ export interface CategoryStat {
   call_count: number;
 }
 
+export interface Failure {
+  item_id: string;
+  category: string;
+  provider: string;
+  raw_response: string | null;
+  created_at: string;
+}
+
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(path);
   if (!res.ok) throw new Error(`${path} returned ${res.status}`);
@@ -41,4 +49,6 @@ export const api = {
   timeseries: () => get<TimeseriesRow[]>("/api/timeseries"),
   incidents: () => get<Incident[]>("/api/incidents"),
   categories: () => get<CategoryStat[]>("/api/categories"),
+  failures: (provider: string) =>
+    get<Failure[]>(`/api/failures?provider=${encodeURIComponent(provider)}`),
 };

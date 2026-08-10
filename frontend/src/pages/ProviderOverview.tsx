@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link as RouterLink } from "react-router-dom";
 import {
   Box,
   Card,
+  CardActionArea,
   CardContent,
   Grid,
   Typography,
@@ -43,6 +45,11 @@ function ProviderCard({
         },
       }}
     >
+      <CardActionArea
+        component={RouterLink}
+        to={`/provider/${encodeURIComponent(stat.provider)}`}
+        sx={{ height: "100%" }}
+      >
       <CardContent sx={{ p: 2.5, "&:last-child": { pb: 2.5 } }}>
         <Box
           sx={{
@@ -129,6 +136,7 @@ function ProviderCard({
           <MetricCell label="Calls" value={String(stat.call_count)} />
         </Box>
       </CardContent>
+      </CardActionArea>
     </Card>
   );
 }

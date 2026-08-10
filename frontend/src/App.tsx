@@ -6,6 +6,7 @@ import PassRateChart from "./pages/PassRateChart";
 import IncidentsFeed from "./pages/IncidentsFeed";
 import CategoryBreakdown from "./pages/CategoryBreakdown";
 import Methodology from "./pages/Methodology";
+import ProviderDetail from "./pages/ProviderDetail";
 
 const NAV = [
   { label: "Overview", to: "/", docTitle: "Routerlens" },
@@ -18,6 +19,11 @@ const NAV = [
 function useDocumentTitle() {
   const { pathname } = useLocation();
   useEffect(() => {
+    const providerMatch = pathname.match(/^\/provider\/(.+)/);
+    if (providerMatch) {
+      document.title = `${decodeURIComponent(providerMatch[1])} — Routerlens`;
+      return;
+    }
     const match = NAV.find((n) =>
       n.to === "/" ? pathname === "/" : pathname.startsWith(n.to),
     );
@@ -86,6 +92,7 @@ export default function App() {
       <Container maxWidth="lg" sx={{ py: 5 }}>
         <Routes>
           <Route path="/" element={<ProviderOverview />} />
+          <Route path="/provider/:name" element={<ProviderDetail />} />
           <Route path="/timeseries" element={<PassRateChart />} />
           <Route path="/categories" element={<CategoryBreakdown />} />
           <Route path="/incidents" element={<IncidentsFeed />} />
