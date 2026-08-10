@@ -40,7 +40,7 @@ Statuses: `todo` | `in_progress` | `done` | `blocked`
 |------|--------|
 | Create Supabase project | todo |
 | Add GitHub Actions secrets: `OPENROUTER_API_KEY`, `DATABASE_URL` | todo |
-| Create Vercel project, link repo | todo |
+| Create Vercel project, link repo | done |
 | Run pre-launch calibration (5× reference on CoreWeave) after task 09 | todo |
 | Ceiling-item review 1 week after launch (`calibrate --ceiling-check`) | todo |
 
