@@ -16,7 +16,9 @@ const NAV = [
 
 function NavTabs() {
   const { pathname } = useLocation();
-  const current = NAV.findIndex((n) => n.to === pathname);
+  const current = NAV.findIndex((n) =>
+    n.to === "/" ? pathname === "/" : pathname.startsWith(n.to),
+  );
 
   return (
     <Tabs value={current === -1 ? 0 : current} textColor="inherit">

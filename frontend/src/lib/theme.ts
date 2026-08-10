@@ -32,7 +32,7 @@ const theme = createTheme({
   },
   typography: {
     fontFamily:
-      "'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+      "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
     h4: {
       fontSize: "1.5rem",
       fontWeight: 600,

@@ -95,19 +95,23 @@ export default function PassRateChart() {
                   wrapperStyle={{ fontSize: 12, paddingTop: 12 }}
                   iconType="plainline"
                 />
-                {providers.map((p, i) => (
-                  <Line
-                    key={p}
-                    type="monotone"
-                    dataKey={p}
-                    name={p}
-                    stroke={getProviderColor(p, i)}
-                    strokeWidth={2}
-                    dot={false}
-                    connectNulls
-                    activeDot={{ r: 4, strokeWidth: 2 }}
-                  />
-                ))}
+                {providers.map((p, i) => {
+                  const dashPatterns = ["", "6 3", "2 2", "8 3 2 3"];
+                  return (
+                    <Line
+                      key={p}
+                      type="monotone"
+                      dataKey={p}
+                      name={p}
+                      stroke={getProviderColor(p, i)}
+                      strokeWidth={2}
+                      strokeDasharray={dashPatterns[i % dashPatterns.length]}
+                      dot={false}
+                      connectNulls
+                      activeDot={{ r: 4, strokeWidth: 2 }}
+                    />
+                  );
+                })}
               </LineChart>
             </ResponsiveContainer>
             <Typography

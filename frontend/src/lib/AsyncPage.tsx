@@ -37,7 +37,13 @@ export default function AsyncPage<T>({
           }}
         >
           <Typography color="text.secondary" sx={{ fontSize: "0.9375rem" }}>
-            Something went wrong loading data.
+            Failed to load data.
+          </Typography>
+          <Typography
+            variant="caption"
+            sx={{ color: "text.secondary", fontFamily: "monospace" }}
+          >
+            {error}
           </Typography>
           {onRetry && (
             <Button

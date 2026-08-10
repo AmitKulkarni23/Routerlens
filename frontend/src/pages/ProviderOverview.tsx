@@ -23,15 +23,11 @@ function ProviderCard({
   color: string;
 }) {
   const passRate = stat.pass_rate;
-  const isHealthy = passRate != null && passRate >= 80;
-  const isDegraded = passRate != null && passRate < 60;
 
   return (
     <Card
       sx={{
         height: "100%",
-        borderTop: `3px solid ${color}`,
-        transition: "border-color 0.15s ease-out",
       }}
     >
       <CardContent sx={{ p: 2.5, "&:last-child": { pb: 2.5 } }}>
@@ -39,13 +35,22 @@ function ProviderCard({
           sx={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between",
+            gap: 1,
             mb: 2,
           }}
         >
+          <Box
+            sx={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              bgcolor: color,
+              flexShrink: 0,
+            }}
+          />
           <Typography
             variant="body2"
-            sx={{ fontWeight: 600, color: "text.primary" }}
+            sx={{ fontWeight: 600, color: "text.primary", flex: 1 }}
           >
             {stat.provider}
           </Typography>
@@ -64,11 +69,7 @@ function ProviderCard({
               fontWeight: 700,
               lineHeight: 1,
               letterSpacing: "-0.02em",
-              color: isDegraded
-                ? "error.main"
-                : isHealthy
-                  ? "text.primary"
-                  : "warning.main",
+              color: "text.primary",
             }}
           >
             {passRate != null ? `${fmt(passRate, 1)}%` : "—"}

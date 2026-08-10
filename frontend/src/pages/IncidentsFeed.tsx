@@ -59,22 +59,7 @@ export default function IncidentsFeed() {
                 disableGutters
                 sx={{ py: 1.5 }}
               >
-                <Box
-                  sx={{
-                    width: 4,
-                    alignSelf: "stretch",
-                    borderRadius: 1,
-                    bgcolor:
-                      severityColor(inc.delta) === "error"
-                        ? "error.main"
-                        : severityColor(inc.delta) === "warning"
-                          ? "warning.main"
-                          : "divider",
-                    mr: 2,
-                    flexShrink: 0,
-                  }}
-                />
-                <ListItemText
+                  <ListItemText
                   primary={
                     <Typography
                       variant="body2"
@@ -90,9 +75,17 @@ export default function IncidentsFeed() {
                   }
                 />
                 <Chip
-                  label={inc.resolved_at ? "resolved" : "open"}
+                  label={
+                    inc.resolved_at
+                      ? "resolved"
+                      : `open · ${Math.abs(inc.delta).toFixed(0)}pt`
+                  }
                   size="small"
-                  color={inc.resolved_at ? "default" : "warning"}
+                  color={
+                    inc.resolved_at
+                      ? "default"
+                      : severityColor(inc.delta)
+                  }
                   variant={inc.resolved_at ? "outlined" : "filled"}
                   sx={{ ml: 1, flexShrink: 0, alignSelf: "center" }}
                 />

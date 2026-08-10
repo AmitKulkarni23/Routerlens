@@ -13,12 +13,10 @@ import {
 import AsyncPage from "../lib/AsyncPage";
 import { api, type CategoryStat } from "../lib/apiClient";
 
-function cellColor(rate: number | null | undefined): string | undefined {
+function cellBg(rate: number | null | undefined): string | undefined {
   if (rate == null) return undefined;
-  if (rate >= 90) return "rgba(45, 106, 79, 0.08)";
-  if (rate >= 70) return "rgba(45, 106, 79, 0.04)";
-  if (rate >= 50) return "rgba(227, 100, 20, 0.06)";
-  return "rgba(193, 18, 31, 0.06)";
+  const opacity = Math.min(0.08, (rate / 100) * 0.08);
+  return `rgba(0, 0, 0, ${opacity.toFixed(3)})`;
 }
 
 export default function CategoryBreakdown() {
@@ -88,7 +86,7 @@ export default function CategoryBreakdown() {
                             key={p}
                             align="right"
                             sx={{
-                              bgcolor: cellColor(rate),
+                              bgcolor: cellBg(rate),
                               fontVariantNumeric: "tabular-nums",
                             }}
                           >
@@ -107,7 +105,7 @@ export default function CategoryBreakdown() {
               sx={{ mt: 1.5, display: "block" }}
             >
               Pass rate by category for the most recent measurement day.
-              Background tints indicate rate bands, not rankings.
+              Subtle tints reflect magnitude only, not judgment.
             </Typography>
           </Box>
         );
