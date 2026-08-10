@@ -55,5 +55,5 @@ docs/
 - Grading is mechanical only: numeric, exact, exact_nospace, json (strip markdown fences → parse → deep equal). Never an LLM judge.
 - No ranking or winner-picking language in UI — show measurements, nothing more.
 - Structured logging in the prober; every call appends a row whether it succeeded or not.
-- Commit messages: one short phrase.
-- After editing any file, commit and push.
+- **NON-NEGOTIABLE — commit cadence:** as soon as work on a file is done, commit it and push. Never batch multiple finished files into one delayed commit, never leave finished work unpushed.
+- **NON-NEGOTIABLE — commit messages:** no longer than 2 phrases. No bodies, no bullet lists.
