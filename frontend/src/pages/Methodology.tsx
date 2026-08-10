@@ -2,7 +2,7 @@ import { Box, Divider, Typography } from "@mui/material";
 
 export default function Methodology() {
   return (
-    <Box sx={{ maxWidth: "65ch" }}>
+    <Box sx={{ maxWidth: "65ch", "& p, & li": { textWrap: "pretty" } }}>
       <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
         Methodology
       </Typography>

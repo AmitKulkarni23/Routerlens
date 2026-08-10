@@ -28,6 +28,10 @@ function ProviderCard({
     <Card
       sx={{
         height: "100%",
+        transition: "box-shadow 0.2s cubic-bezier(0.22, 1, 0.36, 1)",
+        "&:hover": {
+          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+        },
       }}
     >
       <CardContent sx={{ p: 2.5, "&:last-child": { pb: 2.5 } }}>
@@ -70,6 +74,7 @@ function ProviderCard({
               lineHeight: 1,
               letterSpacing: "-0.02em",
               color: "text.primary",
+              fontVariantNumeric: "tabular-nums",
             }}
           >
             {passRate != null ? `${fmt(passRate, 1)}%` : "—"}
@@ -108,7 +113,7 @@ function ProviderCard({
             label="Cost / correct"
             value={
               stat.cost_per_correct_usd != null
-                ? `$${stat.cost_per_correct_usd}`
+                ? `$${fmt(stat.cost_per_correct_usd, 4)}`
                 : "—"
             }
           />
@@ -135,7 +140,11 @@ function MetricCell({ label, value }: { label: string; value: string }) {
       </Typography>
       <Typography
         variant="body2"
-        sx={{ fontWeight: 500, color: "text.primary" }}
+        sx={{
+          fontWeight: 500,
+          color: "text.primary",
+          fontVariantNumeric: "tabular-nums",
+        }}
       >
         {value}
       </Typography>

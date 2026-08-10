@@ -38,17 +38,20 @@ const theme = createTheme({
       fontWeight: 600,
       letterSpacing: "-0.02em",
       lineHeight: 1.2,
+      textWrap: "balance" as const,
     },
     h5: {
       fontSize: "1.25rem",
       fontWeight: 600,
       letterSpacing: "-0.01em",
       lineHeight: 1.3,
+      textWrap: "balance" as const,
     },
     h6: {
       fontSize: "1rem",
       fontWeight: 600,
       lineHeight: 1.4,
+      textWrap: "balance" as const,
     },
     body1: {
       fontSize: "0.9375rem",
