@@ -30,9 +30,9 @@ Statuses: `todo` | `in_progress` | `done` | `blocked`
 | 08 | Probe binary | [spec](task-specs/task-08-probe-binary.md) | done | 2026-08-09 |
 | 09 | Calibrate binary | [spec](task-specs/task-09-calibrate-binary.md) | done | 2026-08-09 |
 | 10 | Detect-incidents binary | [spec](task-specs/task-10-detect-incidents-binary.md) | done | 2026-08-09 |
-| 11 | GitHub Actions daily cron workflow | [spec](task-specs/task-11-github-actions-cron.md) | todo | |
+| 11 | GitHub Actions daily cron workflow | [spec](task-specs/task-11-github-actions-cron.md) | done | 2026-08-09 |
 | 12 | Frontend dashboard | [spec](task-specs/task-12-frontend-dashboard.md) | done | 2026-08-09 |
-| 13 | Vercel deployment config + docs | [spec](task-specs/task-13-vercel-deployment.md) | todo | |
+| 13 | Vercel deployment config + docs | [spec](task-specs/task-13-vercel-deployment.md) | done | 2026-08-09 |
 
 ## Manual prerequisites (human-only, not agent tasks)
 
@@ -59,3 +59,5 @@ Statuses: `todo` | `in_progress` | `done` | `blocked`
 2026-08-09, task 08, probe binary: full pipeline wiring, dry-run stub, bounded concurrency
 2026-08-09, task 09, calibrate binary: 5 filter unit tests, reference + ceiling-check modes
 2026-08-09, task 10, detect_incidents binary: 4 unit tests, evaluate_incident, store wiring
+2026-08-09, task 11, GitHub Actions cron: daily-probe.yml with probe + detect_incidents steps
+2026-08-09, task 13, Vercel deployment: vercel.json, .vercelignore, docs/deployment.md

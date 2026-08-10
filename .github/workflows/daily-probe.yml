@@ -1,0 +1,91 @@
+# Daily probe cron: runs once per day at 02:00 UTC (off-peak).
+# MANUAL PREREQUISITE: Add OPENROUTER_API_KEY and DATABASE_URL as repository
+# secrets in GitHub repo settings before this workflow can run successfully.
+# These cannot be provisioned by this file.
+
+name: daily-probe
+
+on:
+  schedule:
+    - cron: "0 2 * * *"  # 02:00 UTC daily
+  workflow_dispatch:       # allow manual runs via the Actions tab
+
+permissions:
+  contents: read  # least privilege; no write access needed
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            prober/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('prober/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Build workspace (offline, no live DB required)
+        working-directory: prober
+        env:
+          SQLX_OFFLINE: "true"
+        run: cargo build --workspace --release
+
+      - name: Run probe
+        working-directory: prober
+        # Secrets are injected as env vars, never passed as CLI flags or echoed.
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: ./target/release/probe --bank ../data/question_bank.json
+
+      - name: Run detect_incidents
+        working-directory: prober
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: ./target/release/detect_incidents
+
+  ceiling-check:
+    runs-on: ubuntu-latest
+    # Ceiling check runs on manual dispatch only (operator reviews candidates
+    # and passes --anchors + --apply separately).
+    if: github.event_name == 'workflow_dispatch'
+    needs: probe
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            prober/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('prober/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Build workspace (offline)
+        working-directory: prober
+        env:
+          SQLX_OFFLINE: "true"
+        run: cargo build --workspace --release
+
+      - name: Run calibrate ceiling-check (report only, no --apply)
+        working-directory: prober
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: ./target/release/calibrate --ceiling-check
