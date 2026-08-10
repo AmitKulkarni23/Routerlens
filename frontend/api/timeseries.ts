@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { supabase } from "./_lib/supabase";
+import { supabase } from "./_lib/supabase.js";
 
 // Returns all daily_provider_stats rows ordered by day asc, for charting.
 export default async function handler(_req: VercelRequest, res: VercelResponse) {
