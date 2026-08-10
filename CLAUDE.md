@@ -10,7 +10,7 @@ Per-provider quality monitoring for OpenRouter. OpenRouter routes one model ID t
 |-------|------|
 | Prober | Rust stable, cargo workspace — tokio, reqwest (rustls), serde, clap, sqlx, thiserror, uuid, chrono |
 | DB | Supabase (Postgres) |
-| Frontend | React + Vite + Material UI, direct Supabase reads (anon key + RLS) |
+| Frontend | React + Vite + Material UI SPA + Vercel serverless read API (`frontend/api/*`); browser never talks to Supabase directly |
 | CI / Cron | GitHub Actions (daily run) |
 | Frontend deploy | Vercel |
 | LLM API | OpenRouter (`https://openrouter.ai/api/v1`) |
@@ -51,7 +51,7 @@ docs/
 
 ## Conventions
 
-- No secrets in the repo, ever. `.env` is gitignored; CI uses GitHub Actions secrets (`OPENROUTER_API_KEY`, `DATABASE_URL`). Supabase anon key is public by design; service-role key never leaves CI/local env.
+- No secrets in the repo, ever. `.env` is gitignored; CI uses GitHub Actions secrets (`OPENROUTER_API_KEY`, `DATABASE_URL`). Supabase anon key (public by design) is used only server-side in Vercel functions via `SUPABASE_URL`/`SUPABASE_ANON_KEY` env vars; RLS read-only views stay on as defense in depth. Service-role credentials never leave CI/local env.
 - Grading is mechanical only: numeric, exact, exact_nospace, json (strip markdown fences → parse → deep equal). Never an LLM judge.
 - No ranking or winner-picking language in UI — show measurements, nothing more.
 - Structured logging in the prober; every call appends a row whether it succeeded or not.

@@ -21,18 +21,22 @@ OpenRouter multiplexes one model ID across many hosting providers. Providers dif
                        (append-only calls, runs,
                         incidents; aggregate views)
                               ▲
-                              │  anon key, read-only RLS
+                              │  anon key (server-side), read-only RLS
                               │
-                    React dashboard (Vercel)
+                   Vercel serverless functions (/api/*)
+                              ▲
+                              │  JSON over HTTPS
+                              │
+                  React dashboard (Vite SPA on Vercel)
 ```
 
 Components:
 
 1. **Question bank** — `data/question_bank.json`, versioned in git.
 2. **Prober** — Rust cargo workspace; binaries for `probe`, `calibrate`, `detect-incidents`.
-3. **Database** — Supabase Postgres; append-only fact tables + SQL views for the dashboard.
+3. **Database** — Supabase Postgres; append-only fact tables + SQL views for the read API.
 4. **Scheduler** — GitHub Actions cron, daily.
-5. **Dashboard** — React + Vite + MUI, static on Vercel, reads Supabase directly.
+5. **Dashboard** — React + Vite + MUI SPA plus a thin Vercel serverless read API (`/api/*`), mirroring the RedditScraper project's pattern. The browser talks only to `/api/*`; the functions query Supabase views server-side with the anon key. No Supabase URL or key ever reaches the browser.
 
 ## 3. Probe configuration
 
@@ -134,13 +138,24 @@ incidents (
 )
 ```
 
-Dashboard reads go through SQL **views** (e.g. `daily_provider_stats`: pass rate, error rate, p50/p95 latency, cost per correct answer, by provider by day). RLS: anon role gets `SELECT` on views only; fact tables are service-role only. Writes happen exclusively via the prober's `DATABASE_URL` (service credentials, CI secret).
+Dashboard reads go through SQL **views** (e.g. `daily_provider_stats`: pass rate, error rate, p50/p95 latency, cost per correct answer, by provider by day), queried by the Vercel serverless functions. RLS stays on as defense in depth: anon role gets `SELECT` on views only; fact tables are service-role only — even if the anon key leaked, it could only read the same public aggregates the API already serves. Writes happen exclusively via the prober's `DATABASE_URL` (service credentials, CI secret).
 
 ## 8. Incident detection
 
 Per provider, after each run: compare today's pass rate against the 7-day rolling mean (excluding today). If drop ≥ 10 percentage points and ≥ 7 days of history exist, insert an incident row. An open incident resolves when pass rate returns within 3 points of baseline. Mechanical, explainable, no tuning knobs beyond the two thresholds (config constants).
 
 ## 9. Dashboard (v1 scope)
+
+Read API (Vercel serverless functions under `frontend/api/`, TypeScript):
+
+| Endpoint | Serves |
+|---|---|
+| `GET /api/providers` | Latest per-provider stats for the overview cards |
+| `GET /api/timeseries` | Daily pass rate per provider for the hero chart |
+| `GET /api/incidents` | Open + recently resolved incidents |
+| `GET /api/categories` | Per-provider per-category pass rates |
+
+Functions read `SUPABASE_URL` / `SUPABASE_ANON_KEY` from Vercel env vars (server-side only — no `VITE_` prefix, nothing embedded in the browser bundle) and query only the RLS-exposed views. Pages:
 
 - Per-provider overview cards: current pass rate, 7-day trend, error rate, median latency, cost per correct answer.
 - Time-series chart: pass rate per provider over time (the hero visual).
@@ -152,7 +167,7 @@ Per provider, after each run: compare today's pass rate against the 7-day rollin
 ## 10. Security & secrets
 
 - `OPENROUTER_API_KEY`, `DATABASE_URL`: GitHub Actions secrets + local `.env` (gitignored). Never committed; `.env.example` has placeholders.
-- Supabase anon key ships in frontend (public by design), constrained by read-only RLS on views.
+- Supabase anon key is used only server-side in Vercel functions (env vars `SUPABASE_URL`, `SUPABASE_ANON_KEY` in Vercel project settings). It is public-by-design per Supabase's model, but this architecture never exposes it to the browser at all; RLS (read-only `SELECT` on views) remains as defense in depth.
 - Repo is public; CI logs must not echo secrets.
 
 ## 11. Testing policy
@@ -164,7 +179,7 @@ Unit tests **only** for critical business logic:
 - calibration filtering rules
 - incident detection thresholds
 
-No frontend unit tests. No integration-test harness against live OpenRouter in CI (cost + rate limit); a `--dry-run` flag lets the prober execute the full pipeline against a stub.
+No frontend unit tests (this includes the Vercel serverless functions — they are read-and-serialize glue). No integration-test harness against live OpenRouter in CI (cost + rate limit); a `--dry-run` flag lets the prober execute the full pipeline against a stub.
 
 ## 12. Out of scope for v1
 

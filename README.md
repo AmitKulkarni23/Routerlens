@@ -12,7 +12,7 @@ Routerlens measures it.
 2. **Grade.** Responses are graded **mechanically** — numeric comparison, exact match, whitespace-stripped match, or JSON deep-equal after stripping markdown fences. No LLM judge, ever.
 3. **Record.** Every call — pass, fail, or transport error — is appended as a timestamped row in Postgres (Supabase). Latency, cost, finish reason, and error kind are recorded alongside correctness.
 4. **Detect.** A provider whose daily pass rate drops ≥10 points below its 7-day rolling mean gets an incident row: *"Provider X dropped 11 points overnight."*
-5. **Show.** A public dashboard displays per-provider accuracy, reliability, latency, cost-per-correct-answer, and incidents. No ranking, no winner-picking — measurements, honestly displayed.
+5. **Show.** A public dashboard (React SPA + a thin Vercel serverless read API) displays per-provider accuracy, reliability, latency, cost-per-correct-answer, and incidents. No ranking, no winner-picking — measurements, honestly displayed.
 
 ## Why the code is public
 
@@ -58,13 +58,13 @@ cd frontend
 bun install && bun run dev
 ```
 
-The frontend reads Supabase directly with the public anon key (read-only RLS on aggregate views). The service-role key and OpenRouter key exist only in `.env` locally and in GitHub Actions secrets in CI.
+The browser never talks to Supabase. The SPA fetches JSON from Vercel serverless functions (`frontend/api/*`), which query Supabase server-side with the anon key (`SUPABASE_URL` / `SUPABASE_ANON_KEY` env vars). RLS restricts the anon role to read-only `SELECT` on aggregate views as defense in depth. The service-role key and OpenRouter key exist only in `.env` locally and in GitHub Actions secrets in CI. Local dev: `vercel dev` runs the SPA and the API functions together.
 
 ## Secrets policy
 
 - `.env` is gitignored. `.env.example` documents required variables with placeholder values.
 - CI secrets: `OPENROUTER_API_KEY`, `DATABASE_URL` — set in GitHub repository settings, never in code.
-- The Supabase anon key is public by design and safe to ship in the frontend.
+- The Supabase anon key is public by design (RLS is the boundary), but it lives only in Vercel env vars and local `.env` — it is never embedded in the browser bundle or committed.
 
 ## Docs
 

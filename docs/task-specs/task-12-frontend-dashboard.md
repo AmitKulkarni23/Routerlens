@@ -5,11 +5,14 @@
 Build the v1 dashboard pages against the Vite/React/MUI scaffold: a
 per-provider overview page with pass-rate time-series chart and summary
 cards, an incidents feed, a category breakdown table, and a methodology
-page. The frontend reads Supabase directly with the public anon key,
-querying only the `daily_provider_stats` view and the `incidents` table's
-read-exposed view (RLS-restricted per Task 02) — no backend API layer.
-Presentation MUST remain neutral: no ranking, scoring, or "winner" language
-anywhere in the UI.
+page, plus a thin read API of Vercel serverless functions under
+`frontend/api/` (mirroring the RedditScraper project's pattern:
+server-side routes query Supabase; the browser only ever fetches JSON from
+`/api/*`). The functions use the anon key server-side and query only the
+`daily_provider_stats` view and the incidents read view (RLS-restricted
+per Task 02). No Supabase client, URL, or key may appear in browser-side
+code or the built bundle. Presentation MUST remain neutral: no ranking,
+scoring, or "winner" language anywhere in the UI.
 
 ## Read First
 
@@ -23,9 +26,12 @@ anywhere in the UI.
   error_rate, p50_latency_ms, p95_latency_ms, cost_per_correct_usd,
   call_count`; `incidents` row shape: `provider, detected_at, metric,
   baseline, observed, delta, resolved_at`.
-- `docs/system-specs/architecture.md` §10 — anon key is public by design,
-  constrained by RLS to views only; the Supabase client MUST use the anon
-  key, never a service-role key, in frontend code.
+- `docs/system-specs/architecture.md` §9 (Read API table) and §10 — the
+  four endpoints (`/api/providers`, `/api/timeseries`, `/api/incidents`,
+  `/api/categories`), and the rule that `SUPABASE_URL` /
+  `SUPABASE_ANON_KEY` are server-side env vars (no `VITE_` prefix ever);
+  the anon key never reaches the browser; the service-role key never
+  appears anywhere in frontend or API code.
 - `README.md` "Why the code is public" and top-level project summary — the
   neutrality framing ("no ranking, no winner-picking") that MUST be
   reflected in copy and layout decisions (no color-coded "best/worst"
@@ -33,16 +39,25 @@ anywhere in the UI.
 
 ## Requirements
 
-### Data access layer
+### Read API (Vercel serverless functions)
 
-- MUST create a single Supabase client instance
-  (`@supabase/supabase-js`, initialized with `import.meta.env.VITE_SUPABASE_URL`
-  and `import.meta.env.VITE_SUPABASE_ANON_KEY`) in one module, imported by
-  all pages — no page MUST construct its own client.
-- MUST query only `daily_provider_stats` and the incidents read view — MUST
-  NOT query `runs`, `calls`, or `item_status` directly (these are
-  service-role-only per RLS; attempting to read them from the frontend
-  MUST NOT be present anywhere in the code, even as dead code).
+- MUST implement four TypeScript serverless functions under `frontend/api/`
+  (Vercel convention): `providers.ts`, `timeseries.ts`, `incidents.ts`,
+  `categories.ts`, each responding to GET with JSON per architecture.md §9.
+- MUST create a single Supabase client helper module (e.g.
+  `frontend/api/_lib/supabase.ts`, following RedditScraper's
+  `packages/web/lib/supabase.ts` shape: `createClient` from
+  `@supabase/supabase-js` using `process.env.SUPABASE_URL` and
+  `process.env.SUPABASE_ANON_KEY`, throwing if either is missing) —
+  imported by all four functions; no function constructs its own client.
+- Env vars MUST NOT use the `VITE_` prefix — that prefix inlines values
+  into the browser bundle, which this architecture forbids.
+- Functions MUST query only `daily_provider_stats` and the incidents/category
+  read views — MUST NOT query `runs`, `calls`, or `item_status` (service-role-only
+  per RLS; those table names must not appear anywhere in `frontend/`, even
+  as dead code).
+- Browser-side code MUST fetch exclusively from `/api/*` — `@supabase/supabase-js`
+  MUST NOT be imported anywhere under `frontend/src/`.
 - Incidents MUST be exposed to the frontend through a dedicated read-only
   view (e.g. `incidents_public`) rather than the raw `incidents` table if
   the Task 02 schema did not already expose incidents through
@@ -83,9 +98,10 @@ anywhere in the UI.
 ## TDD Plan
 
 N/A — no frontend unit tests per project testing policy (architecture.md
-§11: "No frontend unit tests"). Verify manually via `bun run dev` and
-visual inspection against a scratch Supabase project seeded with sample
-`daily_provider_stats` and incidents rows.
+§11: "No frontend unit tests", explicitly including the serverless
+functions). Verify manually via `vercel dev` (runs SPA + API functions
+together) and visual inspection against a scratch Supabase project seeded
+with sample `daily_provider_stats` and incidents rows.
 
 ## Dependencies
 
@@ -93,14 +109,16 @@ Task 01 (repo scaffolding — frontend Vite/MUI scaffold), Task 02 (Supabase sch
 
 ## Files to Create/Modify
 
-- `frontend/src/lib/supabaseClient.ts` (create)
+- `frontend/api/_lib/supabase.ts` (create — shared server-side Supabase client helper)
+- `frontend/api/providers.ts`, `frontend/api/timeseries.ts`, `frontend/api/incidents.ts`, `frontend/api/categories.ts` (create — serverless functions)
+- `frontend/src/lib/apiClient.ts` (create — typed fetch wrappers for the four `/api/*` endpoints)
 - `frontend/src/pages/ProviderOverview.tsx` (create)
 - `frontend/src/pages/PassRateChart.tsx` or equivalent chart component (create)
 - `frontend/src/pages/IncidentsFeed.tsx` (create)
 - `frontend/src/pages/CategoryBreakdown.tsx` (create)
 - `frontend/src/pages/Methodology.tsx` (create)
 - `frontend/src/App.tsx` (modify — routing between the above pages)
-- `frontend/.env.example` (create — `VITE_SUPABASE_URL=`, `VITE_SUPABASE_ANON_KEY=` placeholders)
+- `frontend/.env.example` (create — `SUPABASE_URL=`, `SUPABASE_ANON_KEY=` placeholders; no `VITE_` prefix)
 - `supabase/migrations/000X_public_incidents_and_category_views.sql` (create, only if Task 02's schema does not already expose category-level and incident data to anon — document which views were added)
 
 ## Acceptance Criteria
@@ -108,10 +126,13 @@ Task 01 (repo scaffolding — frontend Vite/MUI scaffold), Task 02 (Supabase sch
 - All RED tests written and failing for the right reason: N/A, no frontend unit tests per policy.
 - All tests GREEN with minimal implementation: N/A.
 - REFACTOR pass complete, no regressions: N/A.
-- `bun run dev` renders all four pages without console errors against a
-  seeded scratch Supabase project.
-- No component queries `runs`, `calls`, or `item_status` directly (verified
-  by grepping `frontend/src` for those table names outside of comments).
+- `vercel dev` renders all four pages without console errors against a
+  seeded scratch Supabase project, with data flowing through `/api/*`.
+- No code under `frontend/` references `runs`, `calls`, or `item_status`
+  (verified by grep), and `@supabase/supabase-js` is not imported anywhere
+  under `frontend/src/` (browser code) — only under `frontend/api/`.
+- The production bundle (`dist/`) contains no occurrence of `supabase.co`
+  or the anon key (verified by grepping build output).
 - No page contains ranking/winner language (verified by manual copy review
   against the methodology framing in `README.md`).
 - `bun run build` succeeds.

@@ -2,8 +2,9 @@
 
 ## Summary
 
-Add the Vercel project configuration for deploying `frontend/` as a static
-Vite build, and document the manual one-time setup steps (Vercel project
+Add the Vercel project configuration for deploying `frontend/` as a Vite
+static build plus the `frontend/api/` serverless functions (Task 12's read
+API), and document the manual one-time setup steps (Vercel project
 creation, Supabase project creation, environment variable configuration)
 that cannot be automated by code in this repository. This task produces
 config files and documentation only — it does not create the Vercel or
@@ -13,8 +14,9 @@ Supabase accounts/projects themselves, per explicit scope boundary.
 
 - `README.md` "Running locally" and "Secrets policy" — the two secrets
   categories (`.env` for local, GitHub Actions secrets for CI) and the
-  distinct frontend env vars (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
-  from Task 12) that Vercel's project settings must also carry.
+  server-side API env vars (`SUPABASE_URL`, `SUPABASE_ANON_KEY` from Task
+  12 — no `VITE_` prefix, never bundled into the browser) that Vercel's
+  project settings must carry for the serverless functions.
 - `docs/system-specs/architecture.md` §2 and §10 — Vercel hosts the static
   frontend only; it never holds `OPENROUTER_API_KEY` or the service-role
   `DATABASE_URL` (those belong to GitHub Actions/local `.env` only, per
@@ -27,12 +29,14 @@ Supabase accounts/projects themselves, per explicit scope boundary.
 - MUST create `frontend/vercel.json` (or root-level `vercel.json` with a
   `frontend` root directory setting — implementer's choice, document which)
   configuring: build command (`bun run build` or equivalent), output
-  directory (`dist`), and framework preset for Vite.
-- MUST ensure the config does NOT embed any secret value — only
-  build/output settings; environment variables (`VITE_SUPABASE_URL`,
-  `VITE_SUPABASE_ANON_KEY`) MUST be referenced as Vercel project
-  environment variables, never hardcoded into `vercel.json` or any
-  committed file.
+  directory (`dist`), framework preset for Vite, and serving of the
+  `frontend/api/` serverless functions (Vercel picks up `api/` at the
+  project root automatically — verify this works with the `frontend`
+  root-directory setting and document the result).
+- MUST ensure the config does NOT embed any secret or key value — only
+  build/output settings; environment variables (`SUPABASE_URL`,
+  `SUPABASE_ANON_KEY`) MUST be set as Vercel project environment
+  variables, never hardcoded into `vercel.json` or any committed file.
 - MUST add a `frontend/.vercelignore` (or confirm `.gitignore` already
   covers `node_modules/`, `dist/`) so build artifacts are not shipped in
   the repo.
@@ -46,8 +50,9 @@ Supabase accounts/projects themselves, per explicit scope boundary.
      (via `supabase db push` or SQL editor); copy the project's anon key
      and URL.
   2. Create a Vercel project linked to this repository's `frontend/`
-     directory; set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` as
-     Vercel project environment variables (Production and Preview).
+     directory; set `SUPABASE_URL` and `SUPABASE_ANON_KEY` as Vercel
+     project environment variables (Production and Preview) — consumed
+     server-side by the `frontend/api/` functions only.
   3. Add `OPENROUTER_API_KEY` and `DATABASE_URL` (the Supabase
      service-role connection string, not the anon key) as GitHub repository
      secrets for the Task 11 workflow — explicitly note these are separate
