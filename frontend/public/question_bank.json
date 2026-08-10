@@ -7,7 +7,6 @@
     { "id": "arith-001", "category": "arithmetic", "difficulty": "easy", "prompt": "What is 17 + 26? Answer with the number only.", "answer": "43", "grade": "numeric" },
     { "id": "arith-002", "category": "arithmetic", "difficulty": "easy", "prompt": "What is 84 * 7? Answer with the number only.", "answer": "588", "grade": "numeric" },
     { "id": "arith-003", "category": "arithmetic", "difficulty": "easy", "prompt": "What is 1024 - 387? Answer with the number only.", "answer": "637", "grade": "numeric" },
-    { "id": "arith-004", "category": "arithmetic", "difficulty": "medium", "prompt": "What is 13 * 24 + 17? Answer with the number only.", "answer": "329", "grade": "numeric" },
     { "id": "arith-005", "category": "arithmetic", "difficulty": "medium", "prompt": "What is 7 to the power of 4? Answer with the number only.", "answer": "2401", "grade": "numeric" },
     { "id": "arith-006", "category": "arithmetic", "difficulty": "medium", "prompt": "What is 15% of 480? Answer with the number only.", "answer": "72", "grade": "numeric" },
     { "id": "arith-007", "category": "arithmetic", "difficulty": "medium", "prompt": "What is the remainder when 1234 is divided by 9? Answer with the number only.", "answer": "1", "grade": "numeric" },
