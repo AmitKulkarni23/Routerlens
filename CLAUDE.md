@@ -37,6 +37,12 @@ docs/
 .github/workflows/ # Daily probe cron
 ```
 
+## Task Workflow
+
+- **Before starting any implementation work, read `docs/TASKS.md`** — it is the single source of truth for what is done and what to pick up next. Respect the wave ordering and task dependencies.
+- Claim a task by setting its status to `in_progress`; when finished, set it to `done` with the date, append a line to the Done log, and commit the `docs/TASKS.md` update together with the task's changes.
+- Full specs for each task are in `docs/task-specs/`.
+
 ## Testing Policy
 
 - Unit tests ONLY for critical business logic: grading functions, calibration filtering, incident detection, work-item fan-out.
