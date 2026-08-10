@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Box, CircularProgress, Typography } from "@mui/material";
+import { useCallback, useEffect, useState } from "react";
+import { Box, Typography } from "@mui/material";
 import {
   LineChart,
   Line,
@@ -10,9 +10,9 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import AsyncPage from "../lib/AsyncPage";
 import { api, type TimeseriesRow } from "../lib/apiClient";
-
-const COLORS = ["#1976d2", "#2e7d32", "#ed6c02", "#7b1fa2"];
+import { getProviderColor } from "../lib/chartColors";
 
 interface ChartPoint {
   day: string;
@@ -30,48 +30,97 @@ function toChartData(rows: TimeseriesRow[]): ChartPoint[] {
 }
 
 export default function PassRateChart() {
-  const [data, setData] = useState<ChartPoint[] | null>(null);
-  const [providers, setProviders] = useState<string[]>([]);
+  const [rows, setRows] = useState<TimeseriesRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  useEffect(() => {
-    api.timeseries()
-      .then((rows) => {
-        const ps = Array.from(new Set(rows.map((r) => r.provider))).sort();
-        setProviders(ps);
-        setData(toChartData(rows));
-      })
-      .catch((e: Error) => setErr(e.message));
+  const load = useCallback(() => {
+    setErr(null);
+    setRows(null);
+    api.timeseries().then(setRows).catch((e: Error) => setErr(e.message));
   }, []);
 
-  if (err) return <Typography color="error">{err}</Typography>;
-  if (!data) return <CircularProgress />;
+  useEffect(load, [load]);
 
   return (
-    <Box>
-      <Typography variant="h5" gutterBottom>Pass Rate Over Time</Typography>
-      <ResponsiveContainer width="100%" height={360}>
-        <LineChart data={data} margin={{ top: 8, right: 24, bottom: 8, left: 8 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="day" tick={{ fontSize: 11 }} />
-          <YAxis domain={[0, 100]} unit="%" tick={{ fontSize: 11 }} />
-          <Tooltip formatter={(v) => `${v}%`} />
-          <Legend />
-          {providers.map((p, i) => (
-            <Line
-              key={p}
-              type="monotone"
-              dataKey={p}
-              stroke={COLORS[i % COLORS.length]}
-              dot={false}
-              connectNulls
-            />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
-      <Typography variant="caption" color="text.secondary">
-        Each line shows one provider's daily pass rate. All providers shown with equal visual weight — no ranking implied.
-      </Typography>
-    </Box>
+    <AsyncPage
+      title="Pass Rate Over Time"
+      data={rows}
+      error={err}
+      onRetry={load}
+      emptyCheck={(d) => d.length === 0}
+      emptyMessage="No timeseries data available yet."
+    >
+      {(data) => {
+        const providers = Array.from(
+          new Set(data.map((r) => r.provider)),
+        ).sort();
+        const chartData = toChartData(data);
+
+        return (
+          <Box>
+            <ResponsiveContainer width="100%" height={380}>
+              <LineChart
+                data={chartData}
+                margin={{ top: 8, right: 16, bottom: 8, left: 0 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="#e4e6ea"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="day"
+                  tick={{ fontSize: 11, fill: "#5c5f6a" }}
+                  tickLine={false}
+                  axisLine={{ stroke: "#e4e6ea" }}
+                />
+                <YAxis
+                  domain={[0, 100]}
+                  unit="%"
+                  tick={{ fontSize: 11, fill: "#5c5f6a" }}
+                  tickLine={false}
+                  axisLine={false}
+                  width={48}
+                />
+                <Tooltip
+                  formatter={(v) => `${v}%`}
+                  contentStyle={{
+                    fontSize: 13,
+                    border: "1px solid #e4e6ea",
+                    borderRadius: 6,
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+                  }}
+                />
+                <Legend
+                  wrapperStyle={{ fontSize: 12, paddingTop: 12 }}
+                  iconType="plainline"
+                />
+                {providers.map((p, i) => (
+                  <Line
+                    key={p}
+                    type="monotone"
+                    dataKey={p}
+                    name={p}
+                    stroke={getProviderColor(p, i)}
+                    strokeWidth={2}
+                    dot={false}
+                    connectNulls
+                    activeDot={{ r: 4, strokeWidth: 2 }}
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ mt: 1.5, display: "block" }}
+            >
+              Each line shows one provider's daily pass rate. All providers
+              shown with equal visual weight.
+            </Typography>
+          </Box>
+        );
+      }}
+    </AsyncPage>
   );
 }

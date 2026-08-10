@@ -1,5 +1,5 @@
-import { BrowserRouter, NavLink, Route, Routes } from "react-router-dom";
-import { AppBar, Container, Tab, Tabs, Toolbar, Typography } from "@mui/material";
+import { BrowserRouter, NavLink, Route, Routes, useLocation } from "react-router-dom";
+import { AppBar, Box, Container, Tab, Tabs, Toolbar, Typography } from "@mui/material";
 import ProviderOverview from "./pages/ProviderOverview";
 import PassRateChart from "./pages/PassRateChart";
 import IncidentsFeed from "./pages/IncidentsFeed";
@@ -14,28 +14,54 @@ const NAV = [
   { label: "Methodology", to: "/methodology" },
 ];
 
+function NavTabs() {
+  const { pathname } = useLocation();
+  const current = NAV.findIndex((n) => n.to === pathname);
+
+  return (
+    <Tabs value={current === -1 ? 0 : current} textColor="inherit">
+      {NAV.map(({ label, to }) => (
+        <Tab
+          key={to}
+          label={label}
+          component={NavLink}
+          to={to}
+        />
+      ))}
+    </Tabs>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
-      <AppBar position="static" color="default" elevation={1}>
-        <Toolbar>
-          <Typography variant="h6" sx={{ mr: 4, fontWeight: 700 }}>
+      <AppBar position="sticky" color="default">
+        <Toolbar sx={{ gap: 1 }}>
+          <Box
+            sx={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              bgcolor: "primary.main",
+              flexShrink: 0,
+            }}
+          />
+          <Typography
+            variant="h6"
+            sx={{
+              mr: 4,
+              fontWeight: 700,
+              fontSize: "1rem",
+              letterSpacing: "-0.01em",
+              color: "text.primary",
+            }}
+          >
             Routerlens
           </Typography>
-          <Tabs value={false} textColor="inherit" indicatorColor="primary">
-            {NAV.map(({ label, to }) => (
-              <Tab
-                key={to}
-                label={label}
-                component={NavLink}
-                to={to}
-                sx={{ minHeight: 64 }}
-              />
-            ))}
-          </Tabs>
+          <NavTabs />
         </Toolbar>
       </AppBar>
-      <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Container maxWidth="lg" sx={{ py: 5 }}>
         <Routes>
           <Route path="/" element={<ProviderOverview />} />
           <Route path="/timeseries" element={<PassRateChart />} />
