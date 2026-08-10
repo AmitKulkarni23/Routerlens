@@ -26,7 +26,7 @@ Statuses: `todo` | `in_progress` | `done` | `blocked`
 | 04 | Work-item fan-out builder | [spec](task-specs/task-04-fanout-builder.md) | done | 2026-08-09 |
 | 05 | OpenRouter client + CallOutcome capture | [spec](task-specs/task-05-openrouter-client.md) | done | 2026-08-09 |
 | 06 | Grading module | [spec](task-specs/task-06-grading-module.md) | done | 2026-08-09 |
-| 07 | Persistence layer (store crate) | [spec](task-specs/task-07-persistence-layer.md) | todo | |
+| 07 | Persistence layer (store crate) | [spec](task-specs/task-07-persistence-layer.md) | done | 2026-08-09 |
 | 08 | Probe binary | [spec](task-specs/task-08-probe-binary.md) | todo | |
 | 09 | Calibrate binary | [spec](task-specs/task-09-calibrate-binary.md) | todo | |
 | 10 | Detect-incidents binary | [spec](task-specs/task-10-detect-incidents-binary.md) | todo | |
@@ -55,3 +55,4 @@ Statuses: `todo` | `in_progress` | `done` | `blocked`
 2026-08-09, task 06, grading crate: 4 grade strategies with 5 passing unit tests
 2026-08-09, task 12, frontend dashboard: 5 pages, 4 API functions, migration 0004
 2026-08-09, task 05, openrouter crate: CallOutcome, ErrorKind, rate-limit retry
+2026-08-09, task 07, store crate: sqlx persistence for runs, calls, incidents, item_status
