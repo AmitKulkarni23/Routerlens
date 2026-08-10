@@ -38,6 +38,20 @@ export interface Failure {
   created_at: string;
 }
 
+export interface BankItem {
+  id: string;
+  category: string;
+  difficulty: string;
+  prompt: string;
+  answer: string;
+  grade: string;
+}
+
+export interface QuestionBank {
+  version: number;
+  items: BankItem[];
+}
+
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(path);
   if (!res.ok) throw new Error(`${path} returned ${res.status}`);
@@ -51,4 +65,5 @@ export const api = {
   categories: () => get<CategoryStat[]>("/api/categories"),
   failures: (provider: string) =>
     get<Failure[]>(`/api/failures?provider=${encodeURIComponent(provider)}`),
+  questionBank: () => get<QuestionBank>("/question_bank.json"),
 };

@@ -7,12 +7,14 @@ import IncidentsFeed from "./pages/IncidentsFeed";
 import CategoryBreakdown from "./pages/CategoryBreakdown";
 import Methodology from "./pages/Methodology";
 import ProviderDetail from "./pages/ProviderDetail";
+import QuestionBank from "./pages/QuestionBank";
 
 const NAV = [
   { label: "Overview", to: "/", docTitle: "Routerlens" },
   { label: "Pass Rate", to: "/timeseries", docTitle: "Pass Rate — Routerlens" },
   { label: "Categories", to: "/categories", docTitle: "Categories — Routerlens" },
   { label: "Incidents", to: "/incidents", docTitle: "Incidents — Routerlens" },
+  { label: "Questions", to: "/questions", docTitle: "Question Bank — Routerlens" },
   { label: "Methodology", to: "/methodology", docTitle: "Methodology — Routerlens" },
 ];
 
@@ -96,6 +98,7 @@ export default function App() {
           <Route path="/timeseries" element={<PassRateChart />} />
           <Route path="/categories" element={<CategoryBreakdown />} />
           <Route path="/incidents" element={<IncidentsFeed />} />
+          <Route path="/questions" element={<QuestionBank />} />
           <Route path="/methodology" element={<Methodology />} />
         </Routes>
       </Container>

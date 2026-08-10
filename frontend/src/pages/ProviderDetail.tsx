@@ -14,13 +14,12 @@ import {
   Typography,
 } from "@mui/material";
 import AsyncPage from "../lib/AsyncPage";
-import { api, type Failure } from "../lib/apiClient";
+import { api, type Failure, type BankItem } from "../lib/apiClient";
 import { getProviderColor } from "../lib/chartColors";
 
 function ResponseCell({ value }: { value: string | null }) {
   const text = value ?? "—";
   const truncated = text.length > 120;
-
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -38,21 +37,43 @@ function ResponseCell({ value }: { value: string | null }) {
         wordBreak: expanded ? "break-all" : undefined,
       }}
     >
-      {expanded ? text : text}
+      {text}
     </Box>
   );
 }
 
+interface FailureRow extends Failure {
+  prompt?: string;
+  expected?: string;
+}
+
 export default function ProviderDetail() {
   const { name } = useParams<{ name: string }>();
-  const [failures, setFailures] = useState<Failure[] | null>(null);
+  const [failures, setFailures] = useState<FailureRow[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   const load = useCallback(() => {
     if (!name) return;
     setErr(null);
     setFailures(null);
-    api.failures(name).then(setFailures).catch((e: Error) => setErr(e.message));
+
+    Promise.all([api.failures(name), api.questionBank()])
+      .then(([fails, bank]) => {
+        const lookup = new Map<string, BankItem>();
+        for (const item of bank.items) {
+          lookup.set(item.id, item);
+        }
+        const enriched: FailureRow[] = fails.map((f) => {
+          const item = lookup.get(f.item_id);
+          return {
+            ...f,
+            prompt: item?.prompt,
+            expected: item?.answer,
+          };
+        });
+        setFailures(enriched);
+      })
+      .catch((e: Error) => setErr(e.message));
   }, [name]);
 
   useEffect(load, [load]);
@@ -83,7 +104,7 @@ export default function ProviderDetail() {
         emptyMessage={`No failures recorded for ${name}. Every question answered correctly.`}
       >
         {(data) => {
-          const byDate = new Map<string, Failure[]>();
+          const byDate = new Map<string, FailureRow[]>();
           for (const f of data) {
             const day = f.created_at.slice(0, 10);
             if (!byDate.has(day)) byDate.set(day, []);
@@ -138,8 +159,8 @@ export default function ProviderDetail() {
                     <Table size="small">
                       <TableHead>
                         <TableRow>
-                          <TableCell>Item</TableCell>
-                          <TableCell>Category</TableCell>
+                          <TableCell>Question</TableCell>
+                          <TableCell>Expected</TableCell>
                           <TableCell>Model responded</TableCell>
                         </TableRow>
                       </TableHead>
@@ -148,17 +169,35 @@ export default function ProviderDetail() {
                           <TableRow key={`${f.item_id}-${i}`} hover>
                             <TableCell
                               sx={{
+                                maxWidth: 320,
+                                fontSize: "0.8125rem",
+                                color: "text.primary",
+                              }}
+                            >
+                              <Typography
+                                variant="body2"
+                                sx={{ mb: 0.5 }}
+                              >
+                                {f.prompt ?? f.item_id}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                sx={{ color: "text.secondary" }}
+                              >
+                                {f.item_id} · {f.category}
+                              </Typography>
+                            </TableCell>
+                            <TableCell
+                              sx={{
                                 fontFamily:
                                   "ui-monospace, 'Cascadia Code', 'Fira Code', Consolas, monospace",
                                 fontSize: "0.75rem",
                                 fontWeight: 500,
                                 whiteSpace: "nowrap",
+                                color: "text.primary",
                               }}
                             >
-                              {f.item_id}
-                            </TableCell>
-                            <TableCell sx={{ color: "text.secondary" }}>
-                              {f.category}
+                              {f.expected ?? "—"}
                             </TableCell>
                             <TableCell>
                               <ResponseCell value={f.raw_response} />
