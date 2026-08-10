@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use chrono::{DateTime, NaiveDate, Utc};
 use uuid::Uuid;
 
+#[derive(Clone)]
 pub struct Store {
     pool: sqlx::PgPool,
 }

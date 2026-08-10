@@ -8,5 +8,8 @@ name = "detect_incidents"
 path = "src/main.rs"
 
 [dependencies]
+store = { path = "../../crates/store" }
 tokio = { workspace = true }
 clap = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }

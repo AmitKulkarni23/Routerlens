@@ -8,5 +8,12 @@ name = "calibrate"
 path = "src/main.rs"
 
 [dependencies]
+bank = { path = "../../crates/bank" }
+fanout = { path = "../../crates/fanout" }
+openrouter = { path = "../../crates/openrouter" }
+grading = { path = "../../crates/grading" }
+store = { path = "../../crates/store" }
 tokio = { workspace = true }
 clap = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }

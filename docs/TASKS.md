@@ -27,9 +27,9 @@ Statuses: `todo` | `in_progress` | `done` | `blocked`
 | 05 | OpenRouter client + CallOutcome capture | [spec](task-specs/task-05-openrouter-client.md) | done | 2026-08-09 |
 | 06 | Grading module | [spec](task-specs/task-06-grading-module.md) | done | 2026-08-09 |
 | 07 | Persistence layer (store crate) | [spec](task-specs/task-07-persistence-layer.md) | done | 2026-08-09 |
-| 08 | Probe binary | [spec](task-specs/task-08-probe-binary.md) | todo | |
-| 09 | Calibrate binary | [spec](task-specs/task-09-calibrate-binary.md) | todo | |
-| 10 | Detect-incidents binary | [spec](task-specs/task-10-detect-incidents-binary.md) | todo | |
+| 08 | Probe binary | [spec](task-specs/task-08-probe-binary.md) | done | 2026-08-09 |
+| 09 | Calibrate binary | [spec](task-specs/task-09-calibrate-binary.md) | done | 2026-08-09 |
+| 10 | Detect-incidents binary | [spec](task-specs/task-10-detect-incidents-binary.md) | done | 2026-08-09 |
 | 11 | GitHub Actions daily cron workflow | [spec](task-specs/task-11-github-actions-cron.md) | todo | |
 | 12 | Frontend dashboard | [spec](task-specs/task-12-frontend-dashboard.md) | done | 2026-08-09 |
 | 13 | Vercel deployment config + docs | [spec](task-specs/task-13-vercel-deployment.md) | todo | |
@@ -56,3 +56,6 @@ Statuses: `todo` | `in_progress` | `done` | `blocked`
 2026-08-09, task 12, frontend dashboard: 5 pages, 4 API functions, migration 0004
 2026-08-09, task 05, openrouter crate: CallOutcome, ErrorKind, rate-limit retry
 2026-08-09, task 07, store crate: sqlx persistence for runs, calls, incidents, item_status
+2026-08-09, task 08, probe binary: full pipeline wiring, dry-run stub, bounded concurrency
+2026-08-09, task 09, calibrate binary: 5 filter unit tests, reference + ceiling-check modes
+2026-08-09, task 10, detect_incidents binary: 4 unit tests, evaluate_incident, store wiring
