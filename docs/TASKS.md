@@ -20,7 +20,7 @@ Statuses: `todo` | `in_progress` | `done` | `blocked`
 
 | # | Task | Spec | Status | Completed |
 |---|------|------|--------|-----------|
-| 01 | Repo scaffolding (cargo workspace, frontend, supabase/, workflows) | [spec](task-specs/task-01-repo-scaffolding.md) | todo | |
+| 01 | Repo scaffolding (cargo workspace, frontend, supabase/, workflows) | [spec](task-specs/task-01-repo-scaffolding.md) | done | 2026-08-09 |
 | 02 | Supabase schema, migrations, RLS, aggregate views | [spec](task-specs/task-02-supabase-schema.md) | todo | |
 | 03 | Question bank loader + validation | [spec](task-specs/task-03-bank-loader.md) | todo | |
 | 04 | Work-item fan-out builder | [spec](task-specs/task-04-fanout-builder.md) | todo | |
@@ -47,3 +47,5 @@ Statuses: `todo` | `in_progress` | `done` | `blocked`
 ## Done log
 
 (append one line per completed task: date, task #, one-phrase note)
+
+2026-08-09, task 01, repo scaffold: Rust workspace + Vite frontend + gitkeep dirs

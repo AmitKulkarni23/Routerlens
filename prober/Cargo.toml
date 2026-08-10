@@ -1,0 +1,23 @@
+[workspace]
+members = [
+    "crates/bank",
+    "crates/fanout",
+    "crates/openrouter",
+    "crates/grading",
+    "crates/store",
+    "bin/probe",
+    "bin/calibrate",
+    "bin/detect_incidents",
+]
+resolver = "2"
+
+[workspace.dependencies]
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1" }
+clap = { version = "4", features = ["derive"] }
+sqlx = { version = "0.8", default-features = false, features = ["postgres", "runtime-tokio-rustls", "uuid", "chrono", "macros"] }
+thiserror = { version = "2" }
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
