@@ -22,8 +22,10 @@ enum Mode {
 #[derive(Parser)]
 #[command(about = "Calibrate item bank against reference provider or check ceiling items")]
 struct Cli {
-    #[arg(long, env = "DATABASE_URL")]
-    database_url: String,
+    #[arg(long, env = "SUPABASE_URL")]
+    supabase_url: String,
+    #[arg(long, env = "SUPABASE_SERVICE_ROLE_KEY")]
+    supabase_service_role_key: String,
     #[arg(long, env = "OPENROUTER_API_KEY")]
     api_key: Option<String>,
     #[arg(long, default_value = "../data/question_bank.json")]
@@ -55,13 +57,7 @@ async fn main() {
 
     let args = Cli::parse();
 
-    let store = match store::Store::connect(&args.database_url).await {
-        Ok(s) => s,
-        Err(e) => {
-            error!("db connect failed: {e}");
-            std::process::exit(1);
-        }
-    };
+    let store = store::Store::new(&args.supabase_url, &args.supabase_service_role_key);
 
     match args.mode {
         Some(Mode::Reference) => run_reference(&args, &store).await,

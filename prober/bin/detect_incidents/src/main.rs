@@ -11,21 +11,22 @@ async fn main() {
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
-    let database_url = match std::env::var("DATABASE_URL") {
+    let supabase_url = match std::env::var("SUPABASE_URL") {
         Ok(u) => u,
         Err(_) => {
-            error!("DATABASE_URL not set");
+            error!("SUPABASE_URL not set");
+            std::process::exit(1);
+        }
+    };
+    let service_key = match std::env::var("SUPABASE_SERVICE_ROLE_KEY") {
+        Ok(k) => k,
+        Err(_) => {
+            error!("SUPABASE_SERVICE_ROLE_KEY not set");
             std::process::exit(1);
         }
     };
 
-    let store = match store::Store::connect(&database_url).await {
-        Ok(s) => s,
-        Err(e) => {
-            error!("db connect failed: {e}");
-            std::process::exit(1);
-        }
-    };
+    let store = store::Store::new(&supabase_url, &service_key);
 
     for provider in PROBED_PROVIDERS {
         let rows = match store.get_daily_pass_rates(provider, HISTORY_DAYS).await {

@@ -19,9 +19,10 @@ const DEFAULT_PROVIDERS: &str = "groq,deepinfra,novita,together";
 struct Cli {
     #[arg(long, default_value = "../data/question_bank.json")]
     bank: PathBuf,
-    /// DATABASE_URL env var used when flag is absent.
-    #[arg(long, env = "DATABASE_URL")]
-    database_url: String,
+    #[arg(long, env = "SUPABASE_URL")]
+    supabase_url: String,
+    #[arg(long, env = "SUPABASE_SERVICE_ROLE_KEY")]
+    supabase_service_role_key: String,
     #[arg(long, default_value = DEFAULT_PROVIDERS)]
     providers: String,
     /// Overrides bank's repeats_per_item when set.
@@ -97,13 +98,7 @@ async fn main() {
     let work_items = fanout::build_work_items(&loaded, &providers, repeats, args.seed);
     info!(count = work_items.len(), "work items built");
 
-    let store = match store::Store::connect(&args.database_url).await {
-        Ok(s) => Arc::new(s),
-        Err(e) => {
-            error!("db connect failed: {e}");
-            std::process::exit(1);
-        }
-    };
+    let store = Arc::new(store::Store::new(&args.supabase_url, &args.supabase_service_role_key));
 
     let git_sha = std::env::var("GIT_SHA").ok();
     let run_id = match store.start_run(loaded.version, git_sha).await {
