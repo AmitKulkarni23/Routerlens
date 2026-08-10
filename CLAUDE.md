@@ -1,106 +1,53 @@
-# Chorus
+# Routerlens
 
-One prompt, many models, side by side. Streams responses from multiple LLMs simultaneously via OpenRouter — user picks which models to compare. No ranking, no judging, no consensus. Pure parallel inference, displayed honestly.
+Per-provider quality monitoring for OpenRouter. OpenRouter routes one model ID to many hosting providers (Groq, DeepInfra, Novita, Together, ...), each possibly serving a different quantization — so "the same model" varies in quality by provider. OpenRouter routes on price/speed/uptime, not output quality. Routerlens measures it: a Rust prober sends a fixed question bank to the same model **pinned to each provider** (fallbacks off), grades responses **mechanically** (no LLM judge), and appends timestamped results to Postgres. A public dashboard shows per-provider accuracy, reliability, latency, cost-per-correct-answer, and detected incidents.
 
-## Why OpenRouter
-
-Multimodel is load-bearing. The entire value proposition exists because one OpenRouter API key reaches many independent providers (OpenAI, Anthropic, Google, Meta, Mistral, etc.) through a single endpoint. Without that, this is just N separate API integrations. OpenRouter collapses that to one.
-
-**PoC constraint:** Free-tier models only (`/free` suffix on OpenRouter model IDs). Zero inference cost.
-
-## Audience
-
-1. **Recruiter scanning a link** — must load fast, look polished, communicate competence in under 10 seconds.
-2. **Founder / engineering leader** — clean SSE streaming, model-agnostic abstraction, infrastructure taste. Reads the code and the UI simultaneously.
-
-## What This Is NOT
-
-- Not a consensus engine
-- Not a judge / ranker / evaluator
-- Does not pick a winner
-- Does not validate or score responses
-
-This is a clean, public-facing demo. Deliberate neutrality — show what each model says, nothing more.
+**The accumulated time series is the product.** The code is deliberately simple and public — anyone can clone it in an afternoon; they cannot clone weeks of measurement history.
 
 ## Stack
 
 | Layer | Tech |
 |-------|------|
-| Backend | Rust, cargo-lambda, Lambda Function URLs |
-| Frontend | React 19 + TypeScript + MUI 7, Vite, Bun runtime |
-| Infra | CDK (TypeScript), CloudFront + S3 + Lambda |
+| Prober | Rust stable, cargo workspace — tokio, reqwest (rustls), serde, clap, sqlx, thiserror, uuid, chrono |
+| DB | Supabase (Postgres) |
+| Frontend | React + Vite + Material UI, direct Supabase reads (anon key + RLS) |
+| CI / Cron | GitHub Actions (daily run) |
+| Frontend deploy | Vercel |
 | LLM API | OpenRouter (`https://openrouter.ai/api/v1`) |
+
+## Probe Configuration
+
+- Model: `meta-llama/llama-3.3-70b-instruct`
+- Probed providers: Groq (quant undisclosed), DeepInfra (fp8), Novita (bf16), Together (fp8)
+- Calibration reference: CoreWeave (fp16)
+- Fan-out: 80 items × 4 providers × 3 repeats = 960 calls/run, daily (OpenRouter limit: 1000 calls/day)
+- Provider pinning: `provider: { order: ["<name>"], allow_fallbacks: false }` in the chat completions request
 
 ## Project Structure
 
 ```
-backend/           # Rust Lambda functions (cargo workspaces)
-  chorus/          # POST /chorus — fan-out prompt to N models, SSE stream
-  models/          # GET /models — proxy OpenRouter free model catalog
-frontend/          # React SPA
-  src/
-    pages/         # Route components
-    components/    # Reusable UI
-    api/           # API client modules
-    types/         # TypeScript types
-infra/             # CDK stack (ChorusStack)
-  lib/
-  bin/
-docs/              # System specs, references
-  system-specs/    # HLD, LLD docs
+prober/            # Rust cargo workspace (probe, grade, calibrate, detect-incidents)
+data/              # question_bank.json — versioned question bank
+frontend/          # React SPA (Vercel)
+supabase/          # SQL migrations, RLS policies, views
+docs/
+  system-specs/    # High-level architecture
+  task-specs/      # Implementable task specs
+  roadmap.md       # Future product directions
+.github/workflows/ # Daily probe cron
 ```
 
-## Build & Run
+## Testing Policy
 
-```bash
-# Frontend
-cd frontend && bun install && bun run dev
-
-# Lambda (requires cargo-lambda)
-cd backend/chorus && cargo lambda build --release --arm64
-cd backend/models && cargo lambda build --release --arm64
-
-# Deploy
-make deploy   # builds all + cdk deploy
-```
-
-## Local Dev (3 terminals)
-
-Vite proxies `/api/models` → `localhost:9001` and `/api/chorus` → `localhost:9002`.
-
-```bash
-# Terminal 1
-make dev-models      # cargo lambda watch on port 9001
-
-# Terminal 2
-make dev-chorus      # cargo lambda watch on port 9002
-
-# Terminal 3
-make dev-frontend    # bun run dev → http://localhost:5173
-```
-
-The `.env` at repo root must have `OPENROUTER_API_KEY=sk-or-...`.
+- Unit tests ONLY for critical business logic: grading functions, calibration filtering, incident detection, work-item fan-out.
+- NO frontend unit tests.
+- Do not add tests beyond this scope.
 
 ## Conventions
 
-- Follow ModelArena project patterns (`~/TechProjects/ModelArena/`) for CDK, Lambda, and frontend structure
-- Origin-verify header pattern for CloudFront → Lambda security
-- Structured JSON logging via `tracing` crate
-- No native Rust builds on macOS — use cargo-lambda (cross-compiles via Zig)
-- System specs live in `docs/system-specs/`
-- Two-phase commit messages: subject line + body
-- After editing any file, commit and push the changes
-
-## Environment
-
-OpenRouter API key stored in `.env` (gitignored). Lambda reads from env var `OPENROUTER_API_KEY`.
-
-## OpenRouter Integration
-
-- Base URL: `https://openrouter.ai/api/v1`
-- Auth: `Authorization: Bearer $OPENROUTER_API_KEY`
-- Chat completions: `POST /chat/completions` (OpenAI-compatible)
-- Model list: `GET /models`
-- Free models: filter where model ID contains `:free` or pricing is `0`
-- Streaming: `stream: true` in request body, SSE response
-- Docs: https://openrouter.ai/docs/quickstart
+- No secrets in the repo, ever. `.env` is gitignored; CI uses GitHub Actions secrets (`OPENROUTER_API_KEY`, `DATABASE_URL`). Supabase anon key is public by design; service-role key never leaves CI/local env.
+- Grading is mechanical only: numeric, exact, exact_nospace, json (strip markdown fences → parse → deep equal). Never an LLM judge.
+- No ranking or winner-picking language in UI — show measurements, nothing more.
+- Structured logging in the prober; every call appends a row whether it succeeded or not.
+- Commit messages: one short phrase.
+- After editing any file, commit and push.

@@ -1,31 +1,23 @@
-# Secrets
+# Secrets — never commit environment files
 .env
+.env.*
+!.env.example
 
-# Rust build outputs
+# Rust
 target/
+**/*.rs.bk
 
-# Node
+# Node / frontend
 node_modules/
-package-lock.json
-
-# TypeScript compiled outputs
-*.js
-*.d.ts
-*.js.map
-
-# Frontend build
 dist/
+.vercel/
+*.local
 
-# CDK synthesis output
-cdk.out/
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
 
-# Tool-specific
+# Local scratch
+*.log
 .claude/
-.impeccable/
-.agents/
-.cursor/
-.gemini/
-.kiro/
-
-# TypeScript build info
-frontend/tsconfig.tsbuildinfo
