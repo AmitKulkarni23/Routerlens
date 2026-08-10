@@ -24,7 +24,7 @@ Statuses: `todo` | `in_progress` | `done` | `blocked`
 | 02 | Supabase schema, migrations, RLS, aggregate views | [spec](task-specs/task-02-supabase-schema.md) | done | 2026-08-09 |
 | 03 | Question bank loader + validation | [spec](task-specs/task-03-bank-loader.md) | done | 2026-08-09 |
 | 04 | Work-item fan-out builder | [spec](task-specs/task-04-fanout-builder.md) | done | 2026-08-09 |
-| 05 | OpenRouter client + CallOutcome capture | [spec](task-specs/task-05-openrouter-client.md) | todo | |
+| 05 | OpenRouter client + CallOutcome capture | [spec](task-specs/task-05-openrouter-client.md) | done | 2026-08-09 |
 | 06 | Grading module | [spec](task-specs/task-06-grading-module.md) | done | 2026-08-09 |
 | 07 | Persistence layer (store crate) | [spec](task-specs/task-07-persistence-layer.md) | todo | |
 | 08 | Probe binary | [spec](task-specs/task-08-probe-binary.md) | todo | |
@@ -54,3 +54,4 @@ Statuses: `todo` | `in_progress` | `done` | `blocked`
 2026-08-09, task 04, fanout crate: build_work_items with 4 passing unit tests
 2026-08-09, task 06, grading crate: 4 grade strategies with 5 passing unit tests
 2026-08-09, task 12, frontend dashboard: 5 pages, 4 API functions, migration 0004
+2026-08-09, task 05, openrouter crate: CallOutcome, ErrorKind, rate-limit retry
