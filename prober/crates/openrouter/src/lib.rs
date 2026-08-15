@@ -4,7 +4,6 @@ use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
 
-const MODEL: &str = "meta-llama/llama-3.3-70b-instruct";
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
 const RATE_LIMIT_RETRY_DELAY: Duration = Duration::from_secs(2);
 
@@ -13,15 +12,20 @@ pub struct OpenRouterClient {
     api_key: String,
     base_url: String,
     http: reqwest::Client,
+    model: String,
 }
 
 impl OpenRouterClient {
-    pub fn new(api_key: String, base_url: String) -> Self {
+    pub fn new(api_key: String, base_url: String, model: String) -> Self {
         let http = reqwest::Client::builder()
             .timeout(REQUEST_TIMEOUT)
             .build()
             .expect("failed to build reqwest client");
-        Self { api_key, base_url, http }
+        Self { api_key, base_url, http, model }
+    }
+
+    pub fn model(&self) -> &str {
+        &self.model
     }
 }
 
@@ -58,7 +62,7 @@ impl ErrorKind {
 
 #[derive(Serialize)]
 struct ChatRequest<'a> {
-    model: &'static str,
+    model: &'a str,
     messages: Vec<Message<'a>>,
     max_tokens: u32,
     stream: bool,
@@ -107,7 +111,7 @@ impl OpenRouterClient {
         max_tokens: u32,
     ) -> CallOutcome {
         let body = ChatRequest {
-            model: MODEL,
+            model: &self.model,
             messages: vec![
                 Message { role: "system", content: system_prompt },
                 Message { role: "user", content: &work_item.prompt },

@@ -127,6 +127,7 @@ struct RunInsert {
     started_at: String,
     bank_version: i32,
     git_sha: Option<String>,
+    model: String,
     status: &'static str,
 }
 
@@ -192,6 +193,7 @@ impl Store {
         &self,
         bank_version: u32,
         git_sha: Option<String>,
+        model: &str,
     ) -> Result<Uuid, StoreError> {
         let id = Uuid::new_v4();
         let body = RunInsert {
@@ -199,6 +201,7 @@ impl Store {
             started_at: Utc::now().to_rfc3339(),
             bank_version: bank_version as i32,
             git_sha,
+            model: model.to_string(),
             status: "partial",
         };
         let resp = self

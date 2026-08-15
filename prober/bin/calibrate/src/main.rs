@@ -12,6 +12,7 @@ const REFERENCE_REPEATS: u32 = 5;
 const RETIRE_THRESHOLD: u32 = 4;
 const PROBED_PROVIDERS: &[&str] = &["Groq", "DeepInfra", "Novita", "Together"];
 const DEFAULT_WINDOW_DAYS: u32 = 7;
+const DEFAULT_MODEL: &str = "meta-llama/llama-3.3-70b-instruct";
 const DEFAULT_SEED: u64 = 99;
 
 #[derive(Clone, ValueEnum)]
@@ -80,7 +81,7 @@ async fn run_reference(args: &Cli, store: &store::Store) {
     info!(items = loaded.items.len(), "bank loaded for reference run");
 
     let api_key = args.api_key.clone().unwrap_or_else(|| std::env::var("OPENROUTER_API_KEY").unwrap_or_default());
-    let client = openrouter::OpenRouterClient::new(api_key, "https://openrouter.ai/api/v1".into());
+    let client = openrouter::OpenRouterClient::new(api_key, "https://openrouter.ai/api/v1".into(), DEFAULT_MODEL.to_string());
 
     let providers = vec![REFERENCE_PROVIDER.to_string()];
     let work_items = fanout::build_work_items(&loaded, &providers, REFERENCE_REPEATS, DEFAULT_SEED);

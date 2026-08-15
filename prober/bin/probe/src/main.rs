@@ -10,6 +10,7 @@ use fanout::WorkItem;
 use openrouter::{CallOutcome, ErrorKind};
 use store::{ItemStatusValue, NewCall, RunStatus};
 
+const DEFAULT_MODEL: &str = "meta-llama/llama-3.3-70b-instruct";
 const DEFAULT_SEED: u64 = 42;
 const DEFAULT_CONCURRENCY: usize = 8;
 const DEFAULT_PROVIDERS: &str = "groq,deepinfra,novita,together";
@@ -23,6 +24,8 @@ struct Cli {
     supabase_url: String,
     #[arg(long, env = "SUPABASE_SERVICE_ROLE_KEY")]
     supabase_service_role_key: String,
+    #[arg(long, default_value = DEFAULT_MODEL)]
+    model: String,
     #[arg(long, default_value = DEFAULT_PROVIDERS)]
     providers: String,
     /// Overrides bank's repeats_per_item when set.
@@ -101,7 +104,7 @@ async fn main() {
     let store = Arc::new(store::Store::new(&args.supabase_url, &args.supabase_service_role_key));
 
     let git_sha = std::env::var("GIT_SHA").ok();
-    let run_id = match store.start_run(loaded.version, git_sha).await {
+    let run_id = match store.start_run(loaded.version, git_sha, &args.model).await {
         Ok(id) => id,
         Err(e) => {
             error!("start_run failed: {e}");
@@ -117,6 +120,7 @@ async fn main() {
     let client = Arc::new(openrouter::OpenRouterClient::new(
         api_key,
         "https://openrouter.ai/api/v1".into(),
+        args.model.clone(),
     ));
 
     let sem = Arc::new(Semaphore::new(args.concurrency));
