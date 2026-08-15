@@ -1,21 +1,22 @@
 export const PROVIDER_COLORS: Record<string, string> = {
-  Groq: "#4361ee",
-  DeepInfra: "#7b2d8e",
-  Novita: "#0077b6",
-  Together: "#6c584c",
+  deepinfra: "#e63946",
+  groq: "#2a9d8f",
+  novita: "#e9c46a",
+  together: "#264653",
 };
 
 export const PROVIDER_COLOR_LIST = [
-  "#4361ee",
-  "#7b2d8e",
-  "#0077b6",
-  "#6c584c",
-  "#9e6c47",
-  "#3a5a40",
+  "#e63946",
+  "#2a9d8f",
+  "#e9c46a",
+  "#264653",
+  "#f4a261",
+  "#606c38",
 ];
 
 export function getProviderColor(provider: string, index: number): string {
   return (
+    PROVIDER_COLORS[provider.toLowerCase()] ??
     PROVIDER_COLORS[provider] ??
     PROVIDER_COLOR_LIST[index % PROVIDER_COLOR_LIST.length]
   );
