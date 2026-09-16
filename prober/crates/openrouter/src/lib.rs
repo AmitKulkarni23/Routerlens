@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
 const RATE_LIMIT_RETRY_DELAY: Duration = Duration::from_secs(2);
+const RATE_LIMIT_MAX_RETRIES: u32 = 2;
 
 #[derive(Debug, Clone)]
 pub struct OpenRouterClient {
@@ -125,15 +126,15 @@ impl OpenRouterClient {
         };
 
         let start = Instant::now();
-        let outcome = self.attempt(&body).await;
+        let mut outcome = self.attempt(&body).await;
 
-        // Single bounded retry on 429.
-        let outcome = if matches!(outcome.error_kind, Some(ErrorKind::RateLimited)) {
-            tokio::time::sleep(RATE_LIMIT_RETRY_DELAY).await;
-            self.attempt(&body).await
-        } else {
-            outcome
-        };
+        // Backs off exponentially on 429s instead of hammering an already-throttled provider.
+        let mut retry = 0;
+        while matches!(outcome.error_kind, Some(ErrorKind::RateLimited)) && retry < RATE_LIMIT_MAX_RETRIES {
+            tokio::time::sleep(RATE_LIMIT_RETRY_DELAY * 2u32.pow(retry)).await;
+            outcome = self.attempt(&body).await;
+            retry += 1;
+        }
 
         // Override latency to cover the full wall-clock span including any retry.
         CallOutcome {
