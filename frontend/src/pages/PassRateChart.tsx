@@ -149,7 +149,6 @@ function MetricPanel({
               stroke={getProviderColor(p, providers.indexOf(p))}
               strokeWidth={2}
               dot={false}
-              connectNulls
               activeDot={{ r: 3, strokeWidth: 1.5 }}
             />
           ))}
