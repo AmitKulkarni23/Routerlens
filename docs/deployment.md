@@ -7,7 +7,7 @@ This guide covers the one-time manual setup required to run Routerlens in produc
 ### 1. Create Supabase Project
 
 1. Sign in at [supabase.com](https://supabase.com) and create a new project.
-2. Once provisioned, apply the migrations from `supabase/migrations/` in order:
+2. Once provisioned, apply the migrations from `infrastructure/migrations/` in order:
    - Option A: `supabase db push` (requires Supabase CLI linked to your project).
    - Option B: Open the SQL editor and run each `.sql` file in numeric order (`0001_`, `0002_`, …).
 3. From **Project Settings → API**, copy the **Project URL** and **anon public key**.

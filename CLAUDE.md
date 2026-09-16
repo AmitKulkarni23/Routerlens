@@ -26,16 +26,38 @@ Per-provider quality monitoring for OpenRouter. OpenRouter routes one model ID t
 ## Project Structure
 
 ```
-prober/            # Rust cargo workspace (probe, grade, calibrate, detect-incidents)
+backend/           # Rust cargo workspace (probe, grade, calibrate, detect-incidents)
 data/              # question_bank.json — versioned question bank
 frontend/          # React SPA (Vercel)
-supabase/          # SQL migrations, RLS policies, views
+infrastructure/    # Supabase SQL migrations, RLS policies, views
 docs/
   system-specs/    # High-level architecture
   task-specs/      # Implementable task specs
   roadmap.md       # Future product directions
 .github/workflows/ # Daily probe cron
 ```
+
+## Local Development
+
+### Frontend
+```bash
+cd frontend
+bun install
+vercel dev          # runs Vite + serverless API functions together
+```
+`vercel dev` is required (not `bun run dev`) because the SPA calls `/api/*` endpoints that are Vercel serverless functions. Plain Vite doesn't execute them. Requires `SUPABASE_URL` and `SUPABASE_ANON_KEY` in `frontend/.env.local`.
+
+### Backend (prober)
+```bash
+cd backend
+cargo build --workspace --release
+./target/release/probe --bank ../data/question_bank.json
+```
+Requires `OPENROUTER_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` in `.env`.
+
+### Deployment
+- **Frontend:** pushes to `main` auto-deploy via Vercel Git integration. Manual: `cd frontend && vercel --prod`.
+- **Backend:** runs daily via GitHub Actions (`daily-probe.yml`). Can be triggered manually from the Actions tab.
 
 ## Task Workflow
 
@@ -54,6 +76,6 @@ docs/
 - No secrets in the repo, ever. `.env` is gitignored; CI uses GitHub Actions secrets (`OPENROUTER_API_KEY`, `DATABASE_URL`). Supabase anon key (public by design) is used only server-side in Vercel functions via `SUPABASE_URL`/`SUPABASE_ANON_KEY` env vars; RLS read-only views stay on as defense in depth. Service-role credentials never leave CI/local env.
 - Grading is mechanical only: numeric, exact, exact_nospace, json (strip markdown fences → parse → deep equal). Never an LLM judge.
 - No ranking or winner-picking language in UI — show measurements, nothing more.
-- Structured logging in the prober; every call appends a row whether it succeeded or not.
+- Structured logging in the backend prober; every call appends a row whether it succeeded or not.
 - **NON-NEGOTIABLE — commit cadence:** as soon as work on a file is done, commit it and push. Never batch multiple finished files into one delayed commit, never leave finished work unpushed.
 - **NON-NEGOTIABLE — commit messages:** no longer than 2 phrases. No bodies, no bullet lists.

@@ -8,7 +8,7 @@ Routerlens measures it.
 
 ## How it works
 
-1. **Probe.** A Rust prober reads a fixed question bank (`data/question_bank.json`) and fans out work items: `item × provider × repeat` (80 items × 4 providers × 3 repeats = 960 calls). Each call pins the model to one provider with fallbacks disabled.
+1. **Probe.** A Rust backend reads a fixed question bank (`data/question_bank.json`) and fans out work items: `item × provider × repeat` (80 items × 4 providers × 3 repeats = 960 calls). Each call pins the model to one provider with fallbacks disabled.
 2. **Grade.** Responses are graded **mechanically** — numeric comparison, exact match, whitespace-stripped match, or JSON deep-equal after stripping markdown fences. No LLM judge, ever.
 3. **Record.** Every call — pass, fail, or transport error — is appended as a timestamped row in Postgres (Supabase). Latency, cost, finish reason, and error kind are recorded alongside correctness.
 4. **Detect.** A provider whose daily pass rate drops ≥10 points below its 7-day rolling mean gets an incident row: *"Provider X dropped 11 points overnight."*
@@ -47,15 +47,15 @@ cp .env.example .env
 # fill in OPENROUTER_API_KEY and DATABASE_URL
 
 # 2. Apply DB migrations
-# (see supabase/ for SQL; apply via supabase CLI or the SQL editor)
+# (see infrastructure/ for SQL; apply via supabase CLI or the SQL editor)
 
 # 3. Run the prober
-cd prober
+cd backend
 cargo run -p probe -- --bank ../data/question_bank.json
 
 # 4. Run the dashboard
 cd frontend
-bun install && bun run dev
+bun install && vercel dev
 ```
 
 The browser never talks to Supabase. The SPA fetches JSON from Vercel serverless functions (`frontend/api/*`), which query Supabase server-side with the anon key (`SUPABASE_URL` / `SUPABASE_ANON_KEY` env vars). RLS restricts the anon role to read-only `SELECT` on aggregate views as defense in depth. The service-role key and OpenRouter key exist only in `.env` locally and in GitHub Actions secrets in CI. Local dev: `vercel dev` runs the SPA and the API functions together.

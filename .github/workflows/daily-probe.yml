@@ -30,16 +30,16 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            prober/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('prober/Cargo.lock') }}
+            backend/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('backend/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
 
       - name: Build workspace
-        working-directory: prober
+        working-directory: backend
         run: cargo build --workspace --release
 
       - name: Run probe
-        working-directory: prober
+        working-directory: backend
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -47,7 +47,7 @@ jobs:
         run: ./target/release/probe --bank ../data/question_bank.json
 
       - name: Run detect_incidents
-        working-directory: prober
+        working-directory: backend
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -71,16 +71,16 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            prober/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('prober/Cargo.lock') }}
+            backend/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('backend/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
 
       - name: Build workspace
-        working-directory: prober
+        working-directory: backend
         run: cargo build --workspace --release
 
       - name: Run calibrate ceiling-check (report only, no --apply)
-        working-directory: prober
+        working-directory: backend
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

@@ -21,3 +21,6 @@ dist/
 # Local scratch
 *.log
 .claude/
+
+# MCP config (local only)
+.mcp.json
