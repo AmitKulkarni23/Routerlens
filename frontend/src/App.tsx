@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { BrowserRouter, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import { AppBar, Box, Container, Tab, Tabs, Toolbar, Typography } from "@mui/material";
+import { Analytics } from "@vercel/analytics/react";
 import ProviderOverview from "./pages/ProviderOverview";
 import PassRateChart from "./pages/PassRateChart";
 import IncidentsFeed from "./pages/IncidentsFeed";
@@ -102,6 +103,7 @@ export default function App() {
           <Route path="/methodology" element={<Methodology />} />
         </Routes>
       </Container>
+      <Analytics />
     </BrowserRouter>
   );
 }
