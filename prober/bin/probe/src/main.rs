@@ -12,7 +12,10 @@ use store::{ItemStatusValue, NewCall, RunStatus};
 
 const DEFAULT_MODEL: &str = "meta-llama/llama-3.3-70b-instruct";
 const DEFAULT_SEED: u64 = 42;
-const DEFAULT_CONCURRENCY: usize = 8;
+// Some providers (e.g. DeepInfra, Novita) throttle a lot sooner than others (Groq,
+// Together) under concurrent load, so concurrency is bounded per-provider rather
+// than shared across the whole run.
+const DEFAULT_PER_PROVIDER_CONCURRENCY: usize = 2;
 const DEFAULT_PROVIDERS: &str = "groq,deepinfra,novita,together";
 
 #[derive(Parser)]
@@ -33,8 +36,8 @@ struct Cli {
     repeats: Option<u32>,
     #[arg(long, default_value_t = DEFAULT_SEED)]
     seed: u64,
-    #[arg(long, default_value_t = DEFAULT_CONCURRENCY)]
-    concurrency: usize,
+    #[arg(long, default_value_t = DEFAULT_PER_PROVIDER_CONCURRENCY)]
+    per_provider_concurrency: usize,
     /// Skip network calls; exercise the full pipeline with synthetic outcomes.
     #[arg(long)]
     dry_run: bool,
@@ -123,12 +126,16 @@ async fn main() {
         args.model.clone(),
     ));
 
-    let sem = Arc::new(Semaphore::new(args.concurrency));
+    let sems: HashMap<String, Arc<Semaphore>> = providers
+        .iter()
+        .map(|p| (p.clone(), Arc::new(Semaphore::new(args.per_provider_concurrency))))
+        .collect();
+    let sems = Arc::new(sems);
     let mut handles = Vec::with_capacity(work_items.len());
     let total = work_items.len();
 
     for work_item in work_items {
-        let sem = sem.clone();
+        let sems = sems.clone();
         let store = store.clone();
         let client = client.clone();
         let status_map = status_map.clone();
@@ -137,6 +144,7 @@ async fn main() {
         let dry_run = args.dry_run;
 
         let handle = tokio::spawn(async move {
+            let sem = sems.get(&work_item.provider).expect("semaphore exists for every provider");
             let _permit = sem.acquire().await.expect("semaphore closed");
 
             let outcome = if dry_run {
